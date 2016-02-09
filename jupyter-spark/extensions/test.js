@@ -15,7 +15,7 @@ define(function () {
     var spark_redirect_uri = get_base_path() + "/spark";
 
     var spark_notebook = function () {
-        window.open(spark_redirect_uri);
+        window.open(spark_redirect_uri + "/api/v1/applications");
     };
 
     var test_button = function () {
