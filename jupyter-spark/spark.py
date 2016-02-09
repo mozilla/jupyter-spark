@@ -1,6 +1,5 @@
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
-from nbconvert.exporters.export import *
 import requests
 import tornado
 import os
@@ -23,8 +22,10 @@ class SparkHandler(IPythonHandler):
 
         tornado_logger.info("Sending request to Spark UI: " + spark_request)
         spark_response = requests.get(spark_request)
+        tornado_logger.info("Receiving response from Spark UI: " + spark_response.text)
         spark_response_json = spark_response.json()
-        print(spark_response_json)
+        self.write(spark_response.text)
+        self.flush()
 
 def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app

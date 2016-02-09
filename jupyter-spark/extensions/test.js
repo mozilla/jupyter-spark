@@ -1,21 +1,11 @@
-function get_base_path() {
-    var loc = window.location;
-    var proto = loc.protocol;
-    var host = loc.hostname;
-    var port = loc.port;
-
-    var base = proto + "//" + host;
-    if (parseInt(port) != 80) {
-        base += ":" + port;
-    }
-    return base;
-}
-
 define(function () {
-    var spark_redirect_uri = get_base_path() + "/spark";
-
     var spark_notebook = function () {
-        window.open(spark_redirect_uri + "/api/v1/applications");
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/spark/api/v1/applications", true);
+        xhr.onload = function() {
+            window.alert(this.responseText);
+        }
+        xhr.send();
     };
 
     var test_button = function () {
