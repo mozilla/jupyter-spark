@@ -30,7 +30,12 @@ define(['jquery', 'base/js/dialog'], function ($, dialog) {
                             case 'RUNNING':
                                 status_class = 'progress-bar-info';
                                 break;
-                            // TODO: find error case status
+                            case 'FAILED':
+                                status_class = 'progress-bar-danger';
+                                break;
+                            case 'UNKNOWN':
+                                status_class = 'progress-bar-warning';
+                                break;
                         }
                         
                         // progress defined in percent
@@ -49,12 +54,12 @@ define(['jquery', 'base/js/dialog'], function ($, dialog) {
                         row.append($('<td/>').append(progress_bar_div));
 
                         application_table.append(row);
-                    })
-                })
+                    });
+                });
                 application_div.append(application_table);
                 element.append(application_div);
             });
-        })
+        });
 
         var modal = dialog.modal({
             title: "Running Spark Jobs",
