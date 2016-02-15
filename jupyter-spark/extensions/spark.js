@@ -7,6 +7,7 @@ define(['jquery', 'base/js/dialog'], function ($, dialog) {
         $.getJSON(api + '/applications').done(function(data) {
             data.forEach(function(e, i) {
                 var application_div = $('<div/>');
+                application_div.append($('<h5/>').text(e.name + ': ' + e.id));
                 var application_table = $('<table/>').addClass('table table-hover');
 
                 var header_row = $('<tr/>');
