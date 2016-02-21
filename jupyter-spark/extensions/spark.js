@@ -1,5 +1,11 @@
-define(['jquery', 'base/js/dialog'], function ($, dialog) {
+define([
+    'jquery', 
+    'base/js/dialog', 
+    'base/js/events',
+    'notebook/js/codecell'
+    ], function ($, dialog, events, codecell) {
     var api = "/spark/api/v1";
+    var CodeCell = codecell.CodeCell;
 
     var show_running_jobs = function() {
         var element = $('<div/>');
@@ -71,7 +77,35 @@ define(['jquery', 'base/js/dialog'], function ($, dialog) {
         modal.addClass("modal_stretch");
     };
 
+    var spark_progress_bar = function(event, data) {
+        var cell = data.cell;
+        if (is_spark_cell(cell)) {
+            add_progress_bar(cell);
+        }
+    }
+
+    var add_progress_bar = function(cell) {
+        var progress_bar_div = cell.element.find('.progress_bar');
+        if (progress_bar_div.length < 1) {
+            var input_area = cell.element.find('.input_area');
+
+            progress_bar_div = $('<div/>')
+                .addClass('progress_bar')
+                .appendTo(input_area);
+        }
+        var msg = "Progress bar goes here";
+        progress_bar_div.text(msg);
+    }
+
+    var is_spark_cell = function(cell) {
+        // TODO: Find a way to detect if cell is actually running Spark
+        return (cell instanceof CodeCell)
+    }
+
     var load_ipython_extension = function () {
+
+        events.on('execute.CodeCell', spark_progress_bar);
+
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
         Jupyter.toolbar.add_buttons_group([{    
             'label':    'show running Spark jobs',
