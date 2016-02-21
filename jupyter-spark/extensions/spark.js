@@ -44,8 +44,10 @@ define([
                                 break;
                         }
                         
+                        var progress_bar_div = create_progress_bar(status_class, e.numCompletedTasks, e.numTasks);
                         // progress defined in percent
-                        var progress = e.numCompletedTasks / e.numTasks * 100;
+
+/*                        var progress = e.numCompletedTasks / e.numTasks * 100;
 
                         var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
                         var progress_bar = $('<div/>')
@@ -56,7 +58,7 @@ define([
                             .attr('aria-valuemax', 100)
                             .css('width', progress + '%')
                             .text(e.numCompletedTasks + ' out of ' + e.numTasks + ' tasks');
-                        progress_bar_div.append(progress_bar);
+                        progress_bar_div.append(progress_bar);*/
                         row.append($('<td/>').append(progress_bar_div));
 
                         application_table.append(row);
@@ -77,6 +79,24 @@ define([
         modal.addClass("modal_stretch");
     };
 
+    var create_progress_bar = function(status_class, completed, total) {
+        // progress defined in percent
+        var progress = completed / total * 100;
+        console.log("Progress is " + progress);
+
+        var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
+        var progress_bar = $('<div/>')
+            .addClass('progress-bar ' + status_class)
+            .attr('role', 'progressbar')
+            .attr('aria-valuenow', progress)
+            .attr('aria-valuemin', 0)
+            .attr('aria-valuemax', 100)
+            .css('width', progress + '%')
+            .text(completed + ' out of ' + total + ' tasks');
+        progress_bar_div.append(progress_bar);
+        return progress_bar_div;
+    }
+
     var spark_progress_bar = function(event, data) {
         var cell = data.cell;
         if (is_spark_cell(cell)) {
@@ -85,16 +105,13 @@ define([
     }
 
     var add_progress_bar = function(cell) {
-        var progress_bar_div = cell.element.find('.progress_bar');
+        var progress_bar_div = cell.element.find('.progress');
         if (progress_bar_div.length < 1) {
             var input_area = cell.element.find('.input_area');
 
-            progress_bar_div = $('<div/>')
-                .addClass('progress_bar')
-                .appendTo(input_area);
+            progress_bar_div = create_progress_bar('progress-bar-info', 5, 5);
+            progress_bar_div.appendTo(input_area);
         }
-        var msg = "Progress bar goes here";
-        progress_bar_div.text(msg);
     }
 
     var is_spark_cell = function(cell) {
