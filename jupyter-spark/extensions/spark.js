@@ -45,20 +45,6 @@ define([
                         }
                         
                         var progress_bar_div = create_progress_bar(status_class, e.numCompletedTasks, e.numTasks);
-                        // progress defined in percent
-
-/*                        var progress = e.numCompletedTasks / e.numTasks * 100;
-
-                        var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
-                        var progress_bar = $('<div/>')
-                            .addClass('progress-bar ' + status_class)
-                            .attr('role', 'progressbar')
-                            .attr('aria-valuenow', progress)
-                            .attr('aria-valuemin', 0)
-                            .attr('aria-valuemax', 100)
-                            .css('width', progress + '%')
-                            .text(e.numCompletedTasks + ' out of ' + e.numTasks + ' tasks');
-                        progress_bar_div.append(progress_bar);*/
                         row.append($('<td/>').append(progress_bar_div));
 
                         application_table.append(row);
@@ -79,6 +65,15 @@ define([
         modal.addClass("modal_stretch");
     };
 
+    var spark_progress_bar = function(event, data) {
+        // TODO: Update progress bar as Spark tasks are being completed
+        // TODO: Remove progress bar when all tasks are completed
+        var cell = data.cell;
+        if (is_spark_cell(cell)) {
+            add_progress_bar(cell);
+        };
+    };
+
     var create_progress_bar = function(status_class, completed, total) {
         // progress defined in percent
         var progress = completed / total * 100;
@@ -95,29 +90,49 @@ define([
             .text(completed + ' out of ' + total + ' tasks');
         progress_bar_div.append(progress_bar);
         return progress_bar_div;
-    }
-
-    var spark_progress_bar = function(event, data) {
-        var cell = data.cell;
-        if (is_spark_cell(cell)) {
-            add_progress_bar(cell);
-        }
-    }
+    };
 
     var add_progress_bar = function(cell) {
-        var progress_bar_div = cell.element.find('.progress');
+        var progress_bar_div = cell.element.find('.progress-container');
         if (progress_bar_div.length < 1) {
             var input_area = cell.element.find('.input_area');
+            var progress_bar_container = $('<div/>')
+                .addClass('progress-container')
+                .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
+                // Temp check to see if progress bar will actually update/be removed
+                .on('click', function (evt) {update_progress_bar(cell, 'progress-bar-info', Math.floor(Math.random()*5), 5)})
+                .on('dblclick', function (evt) {remove_progress_bar(cell)});
 
-            progress_bar_div = create_progress_bar('progress-bar-info', 5, 5);
-            progress_bar_div.appendTo(input_area);
-        }
-    }
+            progress_bar = create_progress_bar('progress-bar-info', 1, 5);
+            progress_bar.appendTo(progress_bar_container);
+            progress_bar_container.appendTo(input_area);
+        };
+    };
+
+    var update_progress_bar = function(cell, status_class, completed, total) {
+        var progress_bar = cell.element.find('.progress');
+        if (progress_bar.length < 1) {
+            console.log("No progress bar found");
+        };
+        var progress = completed / total * 100;
+        progress_bar.addClass('progress-bar ' + status_class)
+                    .attr('aria-valuenow', progress)
+                    .css('width', progress + '%')
+                    .text(completed + ' out of ' + total + ' tasks');
+    };
+
+    var remove_progress_bar = function(cell) {
+        var progress_bar_div = cell.element.find('.progress-container'); 
+        if (progress_bar_div.length < 1) {
+            console.log("No progress bar found");
+        };
+        progress_bar_div.remove();
+    };
 
     var is_spark_cell = function(cell) {
         // TODO: Find a way to detect if cell is actually running Spark
         return (cell instanceof CodeCell)
-    }
+    };
 
     var load_ipython_extension = function () {
 
