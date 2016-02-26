@@ -4,6 +4,7 @@ import requests
 import tornado
 import os
 import logging
+import json
 
 EXTENSION_URL = "/spark"
 
@@ -15,16 +16,21 @@ def raise_error(msg):
 
 class SparkHandler(IPythonHandler):
     def get(self):
-        tornado_logger.info("Received URI from client: " + self.request.uri)
+        #tornado_logger.info("Received URI from client: " + self.request.uri)
         if not self.request.uri.startswith(EXTENSION_URL):
             raise_error("URI did not start with " + EXTENSION_URL)
         spark_request = "http://localhost:4040" + self.request.uri[len(EXTENSION_URL):]
+        #tornado_logger.info("Sending request to Spark UI: " + spark_request)
 
-        tornado_logger.info("Sending request to Spark UI: " + spark_request)
-        spark_response = requests.get(spark_request)
-        tornado_logger.info("Receiving response from Spark UI: " + spark_response.text)
-        spark_response_json = spark_response.json()
-        self.write(spark_response.text)
+        try:
+            spark_response = requests.get(spark_request)
+            client_response = spark_response.text
+            #tornado_logger.info("Receiving response from Spark UI: " + client_response)
+        except requests.exceptions.RequestException:
+            client_response = json.dumps({"error": "SPARK_NOT_RUNNING"})
+            #tornado_logger.info("No response received from Spark UI. Generating error response: " + client_response)
+
+        self.write(client_response)
         self.flush()
 
 def load_jupyter_server_extension(nb_server_app):
