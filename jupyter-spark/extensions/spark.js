@@ -1,5 +1,5 @@
-var api = "/spark/api/v1";
-var update_frequency = 10000; // ms
+var API = "/spark/api/v1";
+var UPDATE_FREQUENCY = 10000; // ms
 
 
 /* 
@@ -21,9 +21,9 @@ var update_cache = function(callbacks) {
         cbs = $.Callbacks();
         cbs.add(callbacks);
     }
-    $.getJSON(api + '/applications').done(function(applications) {
+    $.getJSON(API + '/applications').done(function(applications) {
         applications.forEach(function(application, i) {
-            $.getJSON(api + '/applications/' + application.id + '/jobs').done(function (jobs) {
+            $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
                 cache[i] = application;
                 cache[i].jobs = jobs;
                 if (cbs) {
@@ -127,7 +127,7 @@ define(['jquery', 'base/js/dialog'], function ($, dialog) {
             'id':       'show_running_jobs'
         }]);
         update();
-        window.setInterval(update, update_frequency);
+        window.setInterval(update, UPDATE_FREQUENCY);
     };
 
     return {
