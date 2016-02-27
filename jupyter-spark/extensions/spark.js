@@ -22,12 +22,15 @@ var update_cache = function(callbacks) {
         cbs.add(callbacks);
     }
     $.getJSON(API + '/applications').done(function(applications) {
+        var num_applications = cache.length;
+        var num_completed = 0;
         applications.forEach(function(application, i) {
             $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
                 cache[i] = application;
                 cache[i].jobs = jobs;
-                if (cbs) {
-                    // FIXME: need to check if all applications have been updated
+
+                num_completed++;
+                if (num_completed === num_applications && cbs) {
                     cbs.fire(cache);
                 }
             });
