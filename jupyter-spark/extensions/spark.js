@@ -11,7 +11,7 @@ var cache = [];
 
 var update = function() {
     update_cache(update_dialog_contents);
-}
+};
 
 // callbacks follows jQuery callback style, can be either single function or array of functions
 // callbacks will be passed the cache as a parameter
@@ -33,18 +33,18 @@ var update_cache = function(callbacks) {
             });
         });
     });
-}
+};
 
 var update_dialog_contents = function() {
     if ($('#dialog_contents').length) {
         var element = $('<div/>').attr('id', 'dialog_contents');
         cache.forEach(function(application, i){
             element.append(create_application_table(application));
-        })
+        });
 
         $('#dialog_contents').replaceWith(element);
     }
-}
+};
 
 var create_application_table = function(e) {
     var application_div = $('<div/>');
@@ -63,7 +63,7 @@ var create_application_table = function(e) {
 
     application_div.append(application_table);
     return application_div;
-}
+};
 
 var create_table_row = function(e) {
     var row = $('<tr/>');
@@ -101,7 +101,7 @@ var create_table_row = function(e) {
     progress_bar_div.append(progress_bar);
     row.append($('<td/>').append(progress_bar_div));
     return row;
-}
+};
 
 
 define(['jquery', 'base/js/dialog'], function ($, dialog) {
