@@ -12,11 +12,11 @@ def install_extension():
     from jupyter_core.paths import jupyter_config_dir
 
     # Install JavaScript extension
-    install_nbextension(os.path.join(EXT_DIR, "extensions", "test.js"), overwrite=True, user=True)
+    install_nbextension(os.path.join(EXT_DIR, "extensions", "spark.js"), overwrite=True, user=True)
 
     # Activate the JS extensions on the notebook
     js_cm = ConfigManager()
-    js_cm.update('notebook', {"load_extensions": {'test': True}})
+    js_cm.update('notebook', {"load_extensions": {'spark': True}})
 
     # Activate the Python server extension
     server_cm = ConfigManager(config_dir=jupyter_config_dir())
@@ -45,7 +45,7 @@ setup(
     version="0.1.0",
     description="Jupyter Notebook extension for Apache Spark integration",
     packages=["jupyter-spark"],
-    package_data={'': ['extensions/test.js']},
+    package_data={'': ['extensions/spark.js']},
     install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
     url="https://github.com/mreid-moz/jupyter-spark",
     cmdclass = {"install": InstallCommand}

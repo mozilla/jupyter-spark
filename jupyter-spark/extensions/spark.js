@@ -1,6 +1,6 @@
 
-var api = "/spark/api/v1";
-var update_frequency = 10000; // ms
+var API = "/spark/api/v1";
+var UPDATE_FREQUENCY = 1000; // ms
 
 
 /* 
@@ -12,7 +12,7 @@ var cache = [];
 
 var update = function() {
     update_cache(update_dialog_contents);
-}
+};
 
 // callbacks follows jQuery callback style, can be either single function or array of functions
 // callbacks will be passed the cache as a parameter
@@ -22,30 +22,33 @@ var update_cache = function(callbacks) {
         cbs = $.Callbacks();
         cbs.add(callbacks);
     }
-    $.getJSON(api + '/applications').done(function(applications) {
+    $.getJSON(API + '/applications').done(function(applications) {
+        var num_applications = cache.length;
+        var num_completed = 0;
         applications.forEach(function(application, i) {
-            $.getJSON(api + '/applications/' + application.id + '/jobs').done(function (jobs) {
+            $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
                 cache[i] = application;
                 cache[i].jobs = jobs;
-                if (cbs) {
-                    // FIXME: need to check if all applications have been updated
+
+                num_completed++;
+                if (num_completed === num_applications && cbs) {
                     cbs.fire(cache);
                 }
             });
         });
     });
-}
+};
 
 var update_dialog_contents = function() {
     if ($('#dialog_contents').length) {
         var element = $('<div/>').attr('id', 'dialog_contents');
         cache.forEach(function(application, i){
             element.append(create_application_table(application));
-        })
+        });
 
         $('#dialog_contents').replaceWith(element);
     }
-}
+};
 
 var create_application_table = function(e) {
     var application_div = $('<div/>');
@@ -64,7 +67,7 @@ var create_application_table = function(e) {
 
     application_div.append(application_table);
     return application_div;
-}
+};
 
 var create_table_row = function(e) {
     var row = $('<tr/>');
@@ -102,7 +105,7 @@ var create_table_row = function(e) {
     progress_bar_div.append(progress_bar);
     row.append($('<td/>').append(progress_bar_div));
     return row;
-}
+};
 
 
 define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], function ($, dialog, events, codecell) {
@@ -202,7 +205,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             'id':       'show_running_jobs'
         }]);
         update();
-        window.setInterval(update, update_frequency);
+        window.setInterval(update, UPDATE_FREQUENCY);
     };
 
     return {
