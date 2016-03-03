@@ -11,15 +11,19 @@ EXTENSION_URL = "/spark"
 # Example usage: tornado_logger.error("This is an error!")
 tornado_logger = logging.getLogger("tornado.application")
 
+
 def raise_error(msg):
     raise tornado.web.HTTPError(500, "ERROR: " + msg)
 
+
 class SparkHandler(IPythonHandler):
+    spark_host = None
+
     def get(self):
         #tornado_logger.info("Received URI from client: " + self.request.uri)
         if not self.request.uri.startswith(EXTENSION_URL):
             raise_error("URI did not start with " + EXTENSION_URL)
-        spark_request = "http://localhost:4040" + self.request.uri[len(EXTENSION_URL):]
+        spark_request = spark_host + self.request.uri[len(EXTENSION_URL):]
         #tornado_logger.info("Sending request to Spark UI: " + spark_request)
 
         try:
@@ -33,7 +37,12 @@ class SparkHandler(IPythonHandler):
         self.write(client_response)
         self.flush()
 
+
 def load_jupyter_server_extension(nb_server_app):
+    # Extract our Spark server details from the config:
+    cfg = nb_server_app.config["NotebookApp"]
+    SparkHandler.spark_host = cfg["spark_host"] or "http://localhost:4040"
+
     web_app = nb_server_app.web_app
     host_pattern = ".*$"
     route_pattern = url_path_join(web_app.settings['base_url'], EXTENSION_URL) + ".*"
