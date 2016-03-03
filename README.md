@@ -3,6 +3,8 @@ Jupyter Notebook extension for Apache Spark integration
 
 Include a progress indicator for the current Notebook cell if it invokes a Spark job. Query the Spark UI service on the backend to get the required Spark job information.
 
+To view all currently running jobs, click the "show running Spark jobs" button, or press ```Alt+S```.
+
 NOTE: Uninstalling jupyter-spark via `pip uninstall jupyter-spark` will uninstall the server extension but leave the client extension in a partially installed state. To fully remove the extension:
 
 1. Run `pip uninstall jupyter-spark`
