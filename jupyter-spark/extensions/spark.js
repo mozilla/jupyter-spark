@@ -9,6 +9,8 @@ application.jobs is the result of the /applications/applicationId/jobs
 API request.
 */
 var cache = [];
+var cell_jobs = {};
+var jobs_so_far = 0;
 
 var update = function() {
     update_cache(update_dialog_contents);
@@ -33,6 +35,7 @@ var update_cache = function(callbacks) {
                 num_completed++;
                 if (num_completed === num_applications && cbs) {
                     cbs.fire(cache);
+                    $(document).trigger('progress.bars');
                 }
             });
         });
@@ -152,6 +155,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var add_progress_bar = function(cell) {
+        console.log(cell);
         var progress_bar_div = cell.element.find('.progress-container');
         if (progress_bar_div.length < 1) {
             var input_area = cell.element.find('.input_area');
@@ -162,11 +166,30 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                 .on('click', function (evt) {update_progress_bar(cell, 'progress-bar-info', Math.floor(Math.random()*5), 5)})
                 .on('dblclick', function (evt) {remove_progress_bar(cell)});
 
+            cell_jobs[jobs_so_far] = cell;
+            jobs_so_far++;
+
             progress_bar = create_progress_bar('progress-bar-info', 1, 5);
             progress_bar.appendTo(progress_bar_container);
             progress_bar_container.appendTo(input_area);
         };
     };
+
+    var update_progress_bars = function() {
+        console.log("Update progress bars is called");
+        var cell, job;
+        console.log(cache[0].jobs);
+        // Note: the 0th job will be the last in the list
+        var current_job_num = cache[0].jobs.length - 1;
+        for (var job_num in cell_jobs) {
+            cell = cell_jobs[job_num];
+            console.log(cell);
+            job = cache[0].jobs[current_job_num];
+            console.log(job);
+            update_progress_bar(cell, job.status, job.numCompletedTasks, job.numTasks);
+            current_job_num--;
+        }
+    }
 
     var update_progress_bar = function(cell, status_class, completed, total) {
         var progress_bar = cell.element.find('.progress');
@@ -196,6 +219,10 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var load_ipython_extension = function () {
 
         events.on('execute.CodeCell', spark_progress_bar);
+        $(document).on('progress.bars', update_progress_bars);
+        $(document).on('progress.bars', function(){
+            console.log("event was triggered");
+        })
 
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
         Jupyter.toolbar.add_buttons_group([{    
