@@ -27,18 +27,23 @@ var update_cache = function(callbacks) {
     $.getJSON(API + '/applications').done(function(applications) {
         var num_applications = cache.length;
         var num_completed = 0;
-        applications.forEach(function(application, i) {
-            $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
-                cache[i] = application;
-                cache[i].jobs = jobs;
 
-                num_completed++;
-                if (num_completed === num_applications && cbs) {
-                    cbs.fire(cache);
-                    $(document).trigger('progress.bars');
-                }
+        // Check if Spark is running before processing applications
+        if(!applications.hasOwnProperty('error')){
+            applications.forEach(function(application, i) {
+                $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
+                    cache[i] = application;
+                    cache[i].jobs = jobs;
+
+                    num_completed++;
+                    if (num_completed === num_applications && cbs) {
+                        cbs.fire(cache);
+                        $(document).trigger('update.progress.bars');
+                    }
+                });
             });
-        });
+        }
+
     });
 };
 
@@ -77,8 +82,17 @@ var create_table_row = function(e) {
     row.append($('<td/>').text(e.jobId));
     row.append($('<td/>').text(e.name));
     
+    var status_class = get_status_class(e.status);
+
+    var progress_bar_div = create_progress_bar(status_class, e.numCompletedTasks, e.numTasks);
+    
+    row.append($('<td/>').append(progress_bar_div));
+    return row;
+};
+
+var get_status_class = function(status) {
     var status_class;
-    switch(e.status) {
+    switch(status) {
         case 'SUCCEEDED':
             status_class = 'progress-bar-success';
             break;
@@ -92,9 +106,13 @@ var create_table_row = function(e) {
             status_class = 'progress-bar-warning';
             break;
     }
-    
+    return status_class;
+}
+
+var create_progress_bar = function(status_class, completed, total) {
     // progress defined in percent
-    var progress = e.numCompletedTasks / e.numTasks * 100;
+    var progress = completed / total * 100;
+    console.log("Progress is " + progress);
 
     var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
     var progress_bar = $('<div/>')
@@ -103,11 +121,10 @@ var create_table_row = function(e) {
         .attr('aria-valuenow', progress)
         .attr('aria-valuemin', 0)
         .attr('aria-valuemax', 100)
-        .css({'width': progress + '%', 'min-width': '10px'})
-        .text(e.numCompletedTasks + ' out of ' + e.numTasks + ' tasks');
+        .css('width', progress + '%')
+        .text(completed + ' out of ' + total + ' tasks');
     progress_bar_div.append(progress_bar);
-    row.append($('<td/>').append(progress_bar_div));
-    return row;
+    return progress_bar_div;
 };
 
 
@@ -136,24 +153,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         };
     };
 
-    var create_progress_bar = function(status_class, completed, total) {
-        // progress defined in percent
-        var progress = completed / total * 100;
-        console.log("Progress is " + progress);
-
-        var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
-        var progress_bar = $('<div/>')
-            .addClass('progress-bar ' + status_class)
-            .attr('role', 'progressbar')
-            .attr('aria-valuenow', progress)
-            .attr('aria-valuemin', 0)
-            .attr('aria-valuemax', 100)
-            .css('width', progress + '%')
-            .text(completed + ' out of ' + total + ' tasks');
-        progress_bar_div.append(progress_bar);
-        return progress_bar_div;
-    };
-
     var add_progress_bar = function(cell) {
         console.log(cell);
         var progress_bar_div = cell.element.find('.progress-container');
@@ -180,13 +179,14 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         var cell, job;
         console.log(cache[0].jobs);
         // Note: the 0th job will be the last in the list
+        //       the most recent job will be first
         var current_job_num = cache[0].jobs.length - 1;
         for (var job_num in cell_jobs) {
             cell = cell_jobs[job_num];
             console.log(cell);
             job = cache[0].jobs[current_job_num];
             console.log(job);
-            update_progress_bar(cell, job.status, job.numCompletedTasks, job.numTasks);
+            update_progress_bar(cell, get_status_class(job.status), job.numCompletedTasks, job.numTasks);
             current_job_num--;
         }
     }
@@ -197,6 +197,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             console.log("No progress bar found");
         };
         var progress = completed / total * 100;
+        // TODO: Remove previous progress bar status class if changed
         progress_bar.addClass('progress-bar ' + status_class)
                     .attr('aria-valuenow', progress)
                     .css('width', progress + '%')
@@ -219,10 +220,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var load_ipython_extension = function () {
 
         events.on('execute.CodeCell', spark_progress_bar);
-        $(document).on('progress.bars', update_progress_bars);
-        $(document).on('progress.bars', function(){
-            console.log("event was triggered");
-        })
+        $(document).on('update.progress.bars', update_progress_bars);
 
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
         Jupyter.toolbar.add_buttons_group([{    
