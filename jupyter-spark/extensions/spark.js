@@ -39,8 +39,10 @@ var update_cache = function(callbacks) {
                     num_completed++;
                     if (num_completed === num_applications && cbs) {
                         cbs.fire(cache);
+                    };
+                    if (Object.keys(cell_jobs).length > 0) {
                         $(document).trigger('update.progress.bars');
-                    }
+                    };
                 });
             });
         }
@@ -187,6 +189,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         // Note: the 0th job will be the last in the jobs list
         //       the most recent job will be first
         var total_jobs = cache[0].jobs.length;
+        console.log(cell_jobs);
         for (var job_num in cell_jobs) {
             cell = cell_jobs[job_num];
             job_index = total_jobs - 1 - job_num;
@@ -202,13 +205,13 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         };
         var progress = completed / total * 100;
         // TODO: Remove previous progress bar status class if changed
+        progress_bar.attr('class', 'progress');
         progress_bar.addClass('progress-bar ' + status_class)
                     .attr('aria-valuenow', progress)
                     .css('width', progress + '%')
                     .text(completed + ' out of ' + total + ' tasks');
         if (completed == total) {
             bars_to_remove[cell.id] = cell;
-            //remove_progress_bar(cell);
             delete cell_jobs[job_num];
         }
     };
