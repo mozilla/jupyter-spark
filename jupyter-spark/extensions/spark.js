@@ -115,7 +115,6 @@ var get_status_class = function(status) {
 var create_progress_bar = function(status_class, completed, total) {
     // progress defined in percent
     var progress = completed / total * 100;
-    console.log("Progress is " + progress);
 
     var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
     var progress_bar = $('<div/>')
@@ -125,7 +124,12 @@ var create_progress_bar = function(status_class, completed, total) {
         .attr('aria-valuemin', 0)
         .attr('aria-valuemax', 100)
         .css('width', progress + '%')
-        .text(completed + ' out of ' + total + ' tasks');
+    if (status_class == 'progress-bar-info') {
+        progress_bar.text(completed + ' out of ' + total + ' tasks');
+    } else {
+        console.log("we are not ");
+        progress_bar.text('Loading Spark...');
+    };
     progress_bar_div.append(progress_bar);
     return progress_bar_div;
 };
@@ -157,8 +161,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var remove_progress_bars = function(event, data) {
-        console.log(event);
-        console.log(data);
+        console.log("change was triggered");
         for (var bar in bars_to_remove) {
             remove_progress_bar(bars_to_remove[bar]);
         }
@@ -178,7 +181,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             cell_jobs[jobs_so_far] = cell;
             jobs_so_far++;
 
-            progress_bar = create_progress_bar('progress-bar-info', 1, 5);
+            progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.appendTo(progress_bar_container);
             progress_bar_container.appendTo(input_area);
         };
@@ -212,6 +215,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                     .text(completed + ' out of ' + total + ' tasks');
         if (completed == total) {
             bars_to_remove[cell.id] = cell;
+            //remove_progress_bar(cell);
             delete cell_jobs[job_num];
         }
     };
@@ -234,7 +238,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var load_ipython_extension = function () {
 
         events.on('execute.CodeCell', spark_progress_bar);
-        events.on('output_appended.OutputArea', remove_progress_bars);
+        events.on('set_dirty.Notebook', remove_progress_bars);
         $(document).on('update.progress.bars', update_progress_bars);
 
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
