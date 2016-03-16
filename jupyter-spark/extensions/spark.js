@@ -124,11 +124,10 @@ var create_progress_bar = function(status_class, completed, total) {
         .attr('aria-valuemin', 0)
         .attr('aria-valuemax', 100)
         .css('width', progress + '%')
-    if (status_class == 'progress-bar-info') {
-        progress_bar.text(completed + ' out of ' + total + ' tasks');
-    } else {
-        console.log("we are not ");
+    if (status_class == 'progress-bar-warning') {
         progress_bar.text('Loading Spark...');
+    } else {
+        progress_bar.text(completed + ' out of ' + total + ' tasks');
     };
     progress_bar_div.append(progress_bar);
     return progress_bar_div;
