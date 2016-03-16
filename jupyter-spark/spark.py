@@ -35,7 +35,7 @@ class SparkHandler(IPythonHandler):
             self.set_header("Content-Type", content_type)
 
             if "text" in content_type:
-                # Replace all the relative links with our proxy crap
+                # Replace all the relative links with our proxy links
                 soup = BeautifulSoup(spark_response.text)
 
                 for has_href in ['a', 'link']:
