@@ -70,7 +70,7 @@ class SparkHandler(IPythonHandler):
 def load_jupyter_server_extension(nb_server_app):
     # Extract our Spark server details from the config:
     cfg = nb_server_app.config["NotebookApp"]
-    SparkHandler.spark_host = cfg["spark_host"] or "http://localhost:4040"
+    SparkHandler.spark_host = cfg.get("spark_host", "http://localhost:4040")
 
     web_app = nb_server_app.web_app
     host_pattern = ".*$"
