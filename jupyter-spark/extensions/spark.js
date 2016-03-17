@@ -41,7 +41,9 @@ var update_cache = function(callbacks) {
                     if (num_completed === num_applications && cbs) {
                         cbs.fire(cache);
                     };
-                    if (Object.keys(cell_jobs).length > 0) {
+                    // Update progress bars if jobs have been run and there are cells to be updated
+                    if (jobs.length > 0 && Object.keys(cell_jobs).length > 0) {
+                        jobs_so_far = jobs.length;
                         $(document).trigger('update.progress.bars');
                     };
                 });
@@ -163,15 +165,10 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         for (var job_num in cell_jobs) {
             var bar_never_started = cell_jobs[job_num].element.find('.progress-bar-warning');
             var bar_is_finished = cell_jobs[job_num].element.find('.progress-bar-success');
-            if (bar_never_started.length > 0) {
+            if (bar_never_started.length > 0 || bar_is_finished.length > 0) {
                 remove_progress_bar(cell_jobs[job_num]);
                 delete cell_jobs[job_num];
-                jobs_so_far--;
-            } 
-            else if (bar_is_finished.length > 0) {
-                remove_progress_bar(cell_jobs[job_num]);
-                delete cell_jobs[job_num];
-            };
+            }; 
         }
     }
 
@@ -184,7 +181,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
 
             cell_jobs[jobs_so_far] = cell;
-            jobs_so_far++;
 
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.appendTo(progress_bar_container);
@@ -196,6 +192,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         var cell, job;
         // Note: the 0th job will be the last in the jobs list
         //       the most recent job will be first
+        // TODO: handle case where cell has >1 job
         var total_jobs = cache[0].jobs.length;
         for (var job_num in cell_jobs) {
             cell = cell_jobs[job_num];
@@ -235,6 +232,8 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var load_ipython_extension = function () {
 
         events.on('execute.CodeCell', spark_progress_bar);
+        // set_dirty is triggered when a cell has changed,
+        // eg. when something has been added to the output_area
         events.on('set_dirty.Notebook', remove_progress_bars);
         $(document).on('update.progress.bars', update_progress_bars);
 
