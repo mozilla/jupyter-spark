@@ -9,8 +9,8 @@ application.jobs is the result of the /applications/applicationId/jobs
 API request.
 */
 var cache = [];
+
 var cell_jobs = {};
-var bars_to_remove = {};
 var jobs_so_far = 0;
 
 var update = function() {
@@ -31,6 +31,7 @@ var update_cache = function(callbacks) {
 
         // Check if Spark is running before processing applications
         if(!applications.hasOwnProperty('error')){
+            spark_is_running = true;
             applications.forEach(function(application, i) {
                 $.getJSON(API + '/applications/' + application.id + '/jobs').done(function (jobs) {
                     cache[i] = application;
@@ -151,8 +152,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var spark_progress_bar = function(event, data) {
-        // TODO: Update progress bar as Spark tasks are being completed
-        // TODO: Remove progress bar when all tasks are completed
         var cell = data.cell;
         if (is_spark_cell(cell)) {
             add_progress_bar(cell);
@@ -161,8 +160,18 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
 
     var remove_progress_bars = function(event, data) {
         console.log("change was triggered");
-        for (var bar in bars_to_remove) {
-            remove_progress_bar(bars_to_remove[bar]);
+        for (var job_num in cell_jobs) {
+            var bar_never_started = cell_jobs[job_num].element.find('.progress-bar-warning');
+            var bar_is_finished = cell_jobs[job_num].element.find('.progress-bar-success');
+            if (bar_never_started.length > 0) {
+                remove_progress_bar(cell_jobs[job_num]);
+                delete cell_jobs[job_num];
+                jobs_so_far--;
+            } 
+            else if (bar_is_finished.length > 0) {
+                remove_progress_bar(cell_jobs[job_num]);
+                delete cell_jobs[job_num];
+            };
         }
     }
 
@@ -173,9 +182,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             var progress_bar_container = $('<div/>')
                 .addClass('progress-container')
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
-                // Temp check to see if progress bar will actually update/be removed
-                .on('click', function (evt) {update_progress_bar(cell, 'progress-bar-info', Math.floor(Math.random()*5), 5)})
-                .on('dblclick', function (evt) {remove_progress_bar(cell)});
 
             cell_jobs[jobs_so_far] = cell;
             jobs_so_far++;
@@ -191,7 +197,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         // Note: the 0th job will be the last in the jobs list
         //       the most recent job will be first
         var total_jobs = cache[0].jobs.length;
-        console.log(cell_jobs);
         for (var job_num in cell_jobs) {
             cell = cell_jobs[job_num];
             job_index = total_jobs - 1 - job_num;
@@ -206,17 +211,11 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             console.log("No progress bar found");
         };
         var progress = completed / total * 100;
-        // TODO: Remove previous progress bar status class if changed
         progress_bar.attr('class', 'progress');
         progress_bar.addClass('progress-bar ' + status_class)
                     .attr('aria-valuenow', progress)
                     .css('width', progress + '%')
                     .text(completed + ' out of ' + total + ' tasks');
-        if (completed == total) {
-            bars_to_remove[cell.id] = cell;
-            //remove_progress_bar(cell);
-            delete cell_jobs[job_num];
-        }
     };
 
     var remove_progress_bar = function(cell) {
@@ -225,7 +224,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             console.log("No progress bar found");
         };
         progress_bar_div.remove();
-        delete bars_to_remove[cell.id];
 
     };
 
