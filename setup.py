@@ -42,11 +42,11 @@ class InstallCommand(install):
 
 setup(
     name="jupyter-spark",
-    version="0.1.0",
+    version="0.1.1",
     description="Jupyter Notebook extension for Apache Spark integration",
     packages=["jupyter-spark"],
     package_data={'': ['extensions/spark.js']},
-    install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests"],
+    install_requires = ["ipython >= 4", "jupyter-pip", "jupyter", "requests", "beautifulsoup4"],
     url="https://github.com/mreid-moz/jupyter-spark",
     cmdclass = {"install": InstallCommand}
 )
