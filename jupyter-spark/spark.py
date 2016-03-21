@@ -5,7 +5,7 @@ import tornado
 import os
 import logging
 import json
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 EXTENSION_URL = "/spark"
 
@@ -36,21 +36,17 @@ class SparkHandler(IPythonHandler):
 
             if "text" in content_type:
                 # Replace all the relative links with our proxy links
-                soup = BeautifulSoup(spark_response.text)
+                soup = BeautifulSoup(spark_response.text, "html.parser")
 
                 for has_href in ['a', 'link']:
-                    for a in soup.findAll(has_href):
-                        try:
+                    for a in soup.find_all(has_href):
+                        if "href" in a.attrs:
                             a['href'] = url_path_join(self.web_app, a['href'])
-                        except KeyError:
-                            print "boo", a
 
                 for has_src in ['img', 'script']:
-                    for a in soup.findAll(has_src):
-                        try:
+                    for a in soup.find_all(has_src):
+                        if "src" in a.attrs:
                             a['src'] = url_path_join(self.web_app, a['src'])
-                        except KeyError:
-                            print "boo", a
 
                 client_response = str(soup)
             else:
