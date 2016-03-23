@@ -10,8 +10,9 @@ API request.
 */
 var cache = [];
 
-var cell_jobs = {};
-var jobs_so_far = 0;
+var spark_is_running = false;
+var cell_queue = [];
+var current_cell;
 
 var update = function() {
     update_cache(update_dialog_contents);
@@ -28,7 +29,6 @@ var update_cache = function(callbacks) {
     $.getJSON(API + '/applications').done(function(applications) {
         var num_applications = cache.length;
         var num_completed = 0;
-
         // Check if Spark is running before processing applications
         if(!applications.hasOwnProperty('error')){
             spark_is_running = true;
@@ -42,8 +42,7 @@ var update_cache = function(callbacks) {
                         cbs.fire(cache);
                     };
                     // Update progress bars if jobs have been run and there are cells to be updated
-                    if (jobs.length > 0 && Object.keys(cell_jobs).length > 0) {
-                        jobs_so_far = jobs.length;
+                    if (jobs.length > 0 && cell_queue.length > 0) {
                         $(document).trigger('update.progress.bars');
                     };
                 });
@@ -156,19 +155,22 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var spark_progress_bar = function(event, data) {
         var cell = data.cell;
         if (is_spark_cell(cell)) {
-            add_progress_bar(cell);
+            cell_queue.push(cell);
+            current_cell = cell_queue[0];
+            add_progress_bar(current_cell);
         };
     };
 
     var remove_progress_bars = function(event, data) {
-        console.log("change was triggered");
-        for (var job_num in cell_jobs) {
-            var bar_never_started = cell_jobs[job_num].element.find('.progress-bar-warning');
-            var bar_is_finished = cell_jobs[job_num].element.find('.progress-bar-success');
-            if (bar_never_started.length > 0 || bar_is_finished.length > 0) {
-                remove_progress_bar(cell_jobs[job_num]);
-                delete cell_jobs[job_num];
-            }; 
+        var bar_never_started = current_cell.element.find('.progress-bar-warning');
+        var bar_is_finished = current_cell.element.find('.progress-bar-success');
+        if (bar_never_started.length > 0 || bar_is_finished.length > 0) {
+            remove_progress_bar(current_cell);
+            cell_queue.shift();
+            current_cell = cell_queue[0];
+            if (current_cell != null) {
+                add_progress_bar(current_cell);
+            };
         }
     }
 
@@ -180,8 +182,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                 .addClass('progress-container')
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
 
-            cell_jobs[jobs_so_far] = cell;
-
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.appendTo(progress_bar_container);
             progress_bar_container.appendTo(input_area);
@@ -189,20 +189,12 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var update_progress_bars = function() {
-        var cell, job;
-        // Note: the 0th job will be the last in the jobs list
-        //       the most recent job will be first
-        // TODO: handle case where cell has >1 job
-        var total_jobs = cache[0].jobs.length;
-        for (var job_num in cell_jobs) {
-            cell = cell_jobs[job_num];
-            job_index = total_jobs - 1 - job_num;
-            job = cache[0].jobs[job_index];
-            update_progress_bar(cell, job_num, get_status_class(job.status), job.numCompletedTasks, job.numTasks);
-        }
+        // Note: the 0th job will be the most recent job
+        job = cache[0].jobs[0];
+        update_progress_bar(current_cell, get_status_class(job.status), job.numCompletedTasks, job.numTasks);
     }
 
-    var update_progress_bar = function(cell, job_num, status_class, completed, total) {
+    var update_progress_bar = function(cell, status_class, completed, total) {
         var progress_bar = cell.element.find('.progress');
         if (progress_bar.length < 1) {
             console.log("No progress bar found");
@@ -232,10 +224,11 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var load_ipython_extension = function () {
 
         events.on('execute.CodeCell', spark_progress_bar);
-        // set_dirty is triggered when a cell has changed,
-        // eg. when something has been added to the output_area
-        events.on('set_dirty.Notebook', remove_progress_bars);
+
         $(document).on('update.progress.bars', update_progress_bars);
+
+        // Kernel becomes idle after a cell finishes executing
+        events.on('kernel_idle.Kernel', remove_progress_bars);
 
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
         Jupyter.toolbar.add_buttons_group([{    
