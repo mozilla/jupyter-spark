@@ -13,6 +13,8 @@ var cache = [];
 var spark_is_running = false;
 var cell_queue = [];
 var current_cell;
+var cell_jobs_counter = 0;
+var jobs_in_cache = 0;
 
 var update = function() {
     update_cache(update_dialog_contents);
@@ -178,13 +180,23 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         var progress_bar_div = cell.element.find('.progress-container');
         if (progress_bar_div.length < 1) {
             var input_area = cell.element.find('.input_area');
+            cell_jobs_counter = 0;
+            if (spark_is_running) {
+                jobs_in_cache = cache[0].jobs.length;
+            };
+            var jobs_completed_container = $('<div/>')
+                .addClass('progress_counter')
+                .text("Completing Spark job " + cell_jobs_counter);
             var progress_bar_container = $('<div/>')
                 .addClass('progress-container')
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
 
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.appendTo(progress_bar_container);
+            jobs_completed_container.appendTo(input_area);
             progress_bar_container.appendTo(input_area);
+
+
         };
     };
 
@@ -199,6 +211,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         if (progress_bar.length < 1) {
             console.log("No progress bar found");
         };
+        update_progress_count(cell);
         var progress = completed / total * 100;
         progress_bar.attr('class', 'progress');
         progress_bar.addClass('progress-bar ' + status_class)
@@ -207,11 +220,24 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                     .text(completed + ' out of ' + total + ' tasks');
     };
 
+    var update_progress_count = function(cell) {
+        var progress_count = cell.element.find('.progress_counter');
+        if (progress_count.length < 1) {
+            console.log("No progress counter found");
+        };
+        if (spark_is_running) {
+            cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
+        };
+        progress_count.text("Completing Spark job " + cell_jobs_counter);
+    };
+
     var remove_progress_bar = function(cell) {
         var progress_bar_div = cell.element.find('.progress-container'); 
+        var progress_count = cell.element.find('.progress_counter');
         if (progress_bar_div.length < 1) {
             console.log("No progress bar found");
         };
+        progress_count.remove();
         progress_bar_div.remove();
 
     };
