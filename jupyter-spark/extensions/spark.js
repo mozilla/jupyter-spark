@@ -48,7 +48,7 @@ var update_cache = function(callbacks) {
                         cbs.fire(cache);
                     };
                     // Update progress bars if jobs have been run and there are cells to be updated
-                    if (jobs.length > 0 && cell_queue.length > 0) {
+                    if (jobs.length > jobs_in_cache && cell_queue.length > 0 ) {
                         $(document).trigger('update.progress.bars');
                     };
                 });
@@ -171,6 +171,9 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
 
     var remove_progress_bars = function(event, data) {
         if (current_cell != null) {
+            if (spark_is_running) {
+                jobs_in_cache = cache[0].jobs.length;
+            };
             var bar_never_started = current_cell.element.find('.progress-bar-warning');
             var bar_is_finished = current_cell.element.find('.progress-bar-success');
             if (bar_never_started.length > 0 || bar_is_finished.length > 0) {
