@@ -1,6 +1,7 @@
 
 var API = "/spark/api/v1";
-var UPDATE_FREQUENCY = 1000; // ms
+var UPDATE_FREQUENCY = 10000; // ms
+var UPDATE_FREQUENCY_ACTIVE = 1000;
 var PROGRESS_COUNT_TEXT = "Completing Spark job ";
 
 
@@ -10,6 +11,7 @@ application.jobs is the result of the /applications/applicationId/jobs
 API request.
 */
 var cache = [];
+var current_update_frequency;
 
 var spark_is_running = false;
 var cell_queue = [];
@@ -18,6 +20,7 @@ var cell_jobs_counter = 0;
 var jobs_in_cache = 0;
 
 var update = function() {
+    console.log("updating cache");
     update_cache(update_dialog_contents);
 };
 
@@ -158,6 +161,8 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     var spark_progress_bar = function(event, data) {
         var cell = data.cell;
         if (is_spark_cell(cell)) {
+            window.clearInterval(current_update_frequency);
+            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE);
             cell_queue.push(cell);
             current_cell = cell_queue[0];
             add_progress_bar(current_cell);
@@ -180,6 +185,9 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         current_cell = cell_queue[0];
         if (current_cell != null) {
             add_progress_bar(current_cell);
+        } else {
+            window.clearInterval(current_update_frequency);
+            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
         };
     };
 
@@ -276,7 +284,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             'id':       'show_running_jobs'
         }]);
         update();
-        window.setInterval(update, UPDATE_FREQUENCY);
+        current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
     };
 
     return {
