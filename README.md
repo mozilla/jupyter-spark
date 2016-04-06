@@ -5,6 +5,10 @@ Include a progress indicator for the current Notebook cell if it invokes a Spark
 
 To view all currently running jobs, click the "show running Spark jobs" button, or press ```Alt+S```.
 
+![Alt text](/screenshots/SparkButton.png?raw=true "show running Spark jobs button")
+![Alt text](/screenshots/Dialog.png?raw=true "Spark dialog")
+![Alt text](/screenshots/ProgressBar.png?raw=true "Spark progress bar")
+
 NOTE: Uninstalling jupyter-spark via `pip uninstall jupyter-spark` will uninstall the server extension but leave the client extension in a partially installed state. To fully remove the extension:
 
 1. Run `pip uninstall jupyter-spark`
