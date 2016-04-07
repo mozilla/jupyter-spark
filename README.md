@@ -11,6 +11,7 @@ To view all currently running jobs, click the "show running Spark jobs" button, 
 <br/><br/><br/>
 ![Alt text](/screenshots/Dialog.png?raw=true "Spark dialog")
 <br/><br/><br/>
+
 NOTE: Uninstalling jupyter-spark via `pip uninstall jupyter-spark` will uninstall the server extension but leave the client extension in a partially installed state. To fully remove the extension:
 
 1. Run `pip uninstall jupyter-spark`
