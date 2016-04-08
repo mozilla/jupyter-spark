@@ -1,7 +1,7 @@
 
 var API = "/spark/api/v1";
 var UPDATE_FREQUENCY = 10000; // ms
-var UPDATE_FREQUENCY_ACTIVE = 1000;
+var UPDATE_FREQUENCY_ACTIVE = 500;
 var PROGRESS_COUNT_TEXT = "Running Spark job ";
 
 
@@ -49,7 +49,7 @@ var update_cache = function(callbacks) {
                     };
                     // Update progress bars if jobs have been run and there are cells to be updated
                     if (jobs.length > jobs_in_cache && cell_queue.length > 0 ) {
-                        $(document).trigger('update.progress.bars');
+                        $(document).trigger('update.progress.bar');
                     };
                 });
             });
@@ -57,6 +57,7 @@ var update_cache = function(callbacks) {
 
     });
 };
+
 
 var update_dialog_contents = function() {
     if ($('#dialog_contents').length) {
@@ -159,44 +160,16 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var spark_progress_bar = function(event, data) {
-        console.log("Spark progress bar is called");
         var cell = data.cell;
         if (is_spark_cell(cell)) {
             window.clearInterval(current_update_frequency);
             current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE);
-            console.log("cell_queue before pushing is ");
-            console.log(cell_queue);
             cell_queue.push(cell);
             current_cell = cell_queue[0];
-            console.log("cell_queue after pushing is ");
-            console.log(cell_queue);
             add_progress_bar(current_cell);
         };
     };
 
-    var remove_progress_bars = function(event, data) {
-        console.log("remove_progress_bars is called");
-        if (current_cell != null) {
-            console.log("about to call remove progress bar");
-            remove_progress_bar(current_cell);
-            start_next_progress_bar();           
-        };
-    };
-
-    var start_next_progress_bar = function() {
-        console.log("cell_queue before shift is ");
-        console.log(cell_queue);
-        cell_queue.shift();
-        console.log("cell_queue after shift is ");
-        console.log(cell_queue);
-        current_cell = cell_queue[0];
-        if (current_cell != null) {
-            add_progress_bar(current_cell);
-        } else {
-            window.clearInterval(current_update_frequency);
-            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
-        };
-    };
 
     var add_progress_bar = function(cell) {
         var progress_bar_div = cell.element.find('.progress-container');
@@ -216,7 +189,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
 
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
-            //progress_bar.hide();
+            progress_bar.hide();
             progress_bar.appendTo(progress_bar_container);
             jobs_completed_container.appendTo(input_area);
             progress_bar_container.appendTo(input_area);
@@ -225,22 +198,21 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         };
     };
 
-    var update_progress_bars = function() {
-        // Note: the 0th job will be the most recent job
-        job = cache[0].jobs[0];
-        update_progress_bar(current_cell, get_status_class(job.status), job.numCompletedTasks, job.numTasks);
-    };
+    var update_progress_bar = function() {
+        var job = cache[0].jobs[0];
+        var completed = job.numCompletedTasks;
+        var total = job.numTasks;
 
-    var update_progress_bar = function(cell, status_class, completed, total) {
-        var progress_bar = cell.element.find('.progress');
+        var progress_bar = current_cell.element.find('.progress');
         if (progress_bar.length < 1) {
             console.log("No progress bar found");
         };
-        update_progress_count(cell);
+        update_progress_count(current_cell);
+
         var progress = completed / total * 100;
         progress_bar.attr('class', 'progress');
-        //progress_bar.show();
-        progress_bar.addClass('progress-bar ' + status_class)
+        progress_bar.show();
+        progress_bar.addClass('progress-bar ' + get_status_class(job.status))
                     .attr('aria-valuenow', progress)
                     .css('width', progress + '%')
                     .text(completed + ' out of ' + total + ' tasks');
@@ -272,6 +244,17 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         }
     };
 
+    var start_next_progress_bar = function() {
+        cell_queue.shift();
+        current_cell = cell_queue[0];
+        if (current_cell != null) {
+            add_progress_bar(current_cell);
+        } else {
+            window.clearInterval(current_update_frequency);
+            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
+        };
+    };
+
     var is_spark_cell = function(cell) {
         // TODO: Find a way to detect if cell is actually running Spark
         return (cell instanceof CodeCell)
@@ -281,7 +264,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
 
         events.on('execute.CodeCell', spark_progress_bar);
 
-        $(document).on('update.progress.bars', update_progress_bars);
+        $(document).on('update.progress.bar', update_progress_bar);
 
         // Kernel becomes idle after a cell finishes executing
         events.on('kernel_idle.Kernel', remove_progress_bar);
