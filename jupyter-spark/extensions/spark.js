@@ -53,6 +53,8 @@ var update_cache = function(callbacks) {
                     };
                 });
             });
+        } else {
+            spark_is_running = false;
         }
 
     });
