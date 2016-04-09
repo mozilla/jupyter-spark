@@ -1,4 +1,3 @@
-
 var API = "/spark/api/v1";
 var UPDATE_FREQUENCY = 10000; // ms
 var UPDATE_FREQUENCY_ACTIVE = 500;
@@ -20,7 +19,6 @@ var cell_jobs_counter = 0;
 var jobs_in_cache = 0;
 
 var update = function() {
-    //console.log("updating cache");
     update_cache(update_dialog_contents);
 };
 
@@ -56,10 +54,8 @@ var update_cache = function(callbacks) {
         } else {
             spark_is_running = false;
         }
-
     });
 };
-
 
 var update_dialog_contents = function() {
     if ($('#dialog_contents').length) {
@@ -146,7 +142,6 @@ var create_progress_bar = function(status_class, completed, total) {
 
 
 define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], function ($, dialog, events, codecell) {
-
     var CodeCell = codecell.CodeCell;
 
     var show_running_jobs = function() {
@@ -172,7 +167,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         };
     };
 
-
     var add_progress_bar = function(cell) {
         var progress_bar_div = cell.element.find('.progress-container');
         if (progress_bar_div.length < 1) {
@@ -189,14 +183,11 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
             var progress_bar_container = $('<div/>')
                 .addClass('progress-container')
                 .css({'border': 'none', 'border-top': '1px solid #CFCFCF'})
-
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.hide();
             progress_bar.appendTo(progress_bar_container);
             jobs_completed_container.appendTo(input_area);
             progress_bar_container.appendTo(input_area);
-
-
         };
     };
 
@@ -263,7 +254,6 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
     };
 
     var load_ipython_extension = function () {
-
         events.on('execute.CodeCell', spark_progress_bar);
 
         $(document).on('update.progress.bar', update_progress_bar);
