@@ -47,6 +47,6 @@ setup(
     package_data={'': ['extensions/spark.js']},
     install_requires=["ipython >= 4", "jupyter-pip", "jupyter", "requests",
                       "beautifulsoup4"],
-    url="https://github.com/mreid-moz/jupyter-spark",
+    url="https://github.com/mozilla/jupyter-spark",
     cmdclass={"install": InstallCommand}
 )
