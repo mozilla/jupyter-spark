@@ -1,6 +1,8 @@
 # jupyter-spark
 Jupyter Notebook extension for Apache Spark integration.
 
+To install, simply run `pip install jupyter-spark`. For development and testing, clone the project and run `pip install .` from a shell in the project's root directory.
+
 Include a progress indicator for the current Notebook cell if it invokes a Spark job. Query the Spark UI service on the backend to get the required Spark job information.
 <br/><br/><br/>
 ![Alt text](/screenshots/ProgressBar.png?raw=true "Spark progress bar")
