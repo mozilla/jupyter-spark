@@ -216,10 +216,13 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         if (progress_count.length < 1) {
             console.log("No progress counter found");
         };
+        var job_name = "";
         if (spark_is_running) {
             cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
+            job_name =  ": " + cache[0].jobs[0].name
         };
-        progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter);
+
+        progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
         progress_count.show();
     };
 
