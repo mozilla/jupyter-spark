@@ -1,4 +1,5 @@
-var API = "/spark/api/v1";
+var BASE_URL = Jupyter.utils.get_body_data("baseUrl") || "/";
+var API = BASE_URL + "spark/api/v1";
 var UPDATE_FREQUENCY = 10000; // ms
 var UPDATE_FREQUENCY_ACTIVE = 500;
 var PROGRESS_COUNT_TEXT = "Running Spark job ";
