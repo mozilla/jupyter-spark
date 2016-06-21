@@ -22,9 +22,9 @@ class SparkHandler(IPythonHandler):
     web_app = None
 
     def get(self):
-        if not self.request.uri.startswith(EXTENSION_URL):
-            raise_error("URI did not start with " + EXTENSION_URL)
-        spark_request = self.spark_host + self.request.uri[len(EXTENSION_URL):]
+        if not self.request.uri.startswith(self.web_app):
+            raise_error("URI did not start with " + self.web_app)
+        spark_request = self.spark_host + self.request.uri[len(self.web_app):]
 
         try:
             spark_response = requests.get(spark_request)
@@ -32,7 +32,7 @@ class SparkHandler(IPythonHandler):
             content_type = spark_response.headers['content-type']
             self.set_header("Content-Type", content_type)
 
-            if "text" in content_type:
+            if "text/html" in content_type:
                 # Replace all the relative links with our proxy links
                 soup = BeautifulSoup(spark_response.text, "html.parser")
 
