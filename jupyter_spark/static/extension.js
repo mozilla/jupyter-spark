@@ -4,8 +4,7 @@ var UPDATE_FREQUENCY = 10000; // ms
 var UPDATE_FREQUENCY_ACTIVE = 500;
 var PROGRESS_COUNT_TEXT = "Running Spark job ";
 
-
-/* 
+/*
 cache is an array of application objects with an added property jobs.
 application.jobs is the result of the /applications/applicationId/jobs
 API request.
@@ -92,11 +91,11 @@ var create_table_row = function(e) {
     var row = $('<tr/>');
     row.append($('<td/>').text(e.jobId));
     row.append($('<td/>').text(e.name));
-    
+
     var status_class = get_status_class(e.status);
 
     var progress_bar_div = create_progress_bar(status_class, e.numCompletedTasks, e.numTasks);
-    
+
     row.append($('<td/>').append(progress_bar_div));
     return row;
 };
@@ -124,7 +123,9 @@ var create_progress_bar = function(status_class, completed, total) {
     // progress defined in percent
     var progress = completed / total * 100;
 
-    var progress_bar_div = $('<div/>').addClass('progress').css({'min-width': '100px', 'margin-bottom': 0});
+    var progress_bar_div = $('<div/>')
+        .addClass('progress')
+        .css({'min-width': '100px', 'margin-bottom': 0});
     var progress_bar = $('<div/>')
         .addClass('progress-bar ' + status_class)
         .attr('role', 'progressbar')
@@ -142,7 +143,12 @@ var create_progress_bar = function(status_class, completed, total) {
 };
 
 
-define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], function ($, dialog, events, codecell) {
+define([
+    'jquery',
+    'base/js/dialog',
+    'base/js/events',
+    'notebook/js/codecell'
+], function ($, dialog, events, codecell) {
     var CodeCell = codecell.CodeCell;
 
     var show_running_jobs = function() {
@@ -229,7 +235,7 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
 
     var remove_progress_bar = function() {
         if (current_cell != null) {
-            var progress_bar_div = current_cell.element.find('.progress-container'); 
+            var progress_bar_div = current_cell.element.find('.progress-container');
             var progress_count = current_cell.element.find('.progress_counter');
             if (progress_bar_div.length < 1) {
                 console.log("No progress bar found");
@@ -266,11 +272,11 @@ define(['jquery', 'base/js/dialog', 'base/js/events', 'notebook/js/codecell'], f
         events.on('kernel_idle.Kernel', remove_progress_bar);
 
         Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
-        Jupyter.toolbar.add_buttons_group([{    
-            'label':    'show running Spark jobs',
-            'icon':     'fa-tasks',
+        Jupyter.toolbar.add_buttons_group([{
+            'label': 'show running Spark jobs',
+            'icon': 'fa-tasks',
             'callback': show_running_jobs,
-            'id':       'show_running_jobs'
+            'id': 'show_running_jobs'
         }]);
         update();
         current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
