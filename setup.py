@@ -2,7 +2,7 @@ import os
 from setuptools import setup
 from setuptools.command.install import install
 
-EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter-spark')
+EXT_DIR = os.path.join(os.path.dirname(__file__), 'jupyter_spark')
 
 
 def install_extension():
@@ -25,8 +25,8 @@ def install_extension():
     cfg = server_cm.get('jupyter_notebook_config')
     server_extensions = cfg.setdefault('NotebookApp', {}) \
         .setdefault('server_extensions', [])
-    if "jupyter-spark.spark" not in server_extensions:
-        cfg['NotebookApp']['server_extensions'] += ['jupyter-spark.spark']
+    if "jupyter_spark.spark" not in server_extensions:
+        cfg['NotebookApp']['server_extensions'] += ['jupyter_spark.spark']
         server_cm.update('jupyter_notebook_config', cfg)
 
 
@@ -43,7 +43,7 @@ setup(
     name="jupyter-spark",
     version="0.1.1",
     description="Jupyter Notebook extension for Apache Spark integration",
-    packages=["jupyter-spark"],
+    packages=["jupyter_spark"],
     package_data={'': ['extensions/spark.js']},
     install_requires=["ipython >= 4", "jupyter-pip", "jupyter", "requests",
                       "beautifulsoup4"],
