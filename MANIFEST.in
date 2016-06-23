@@ -1,0 +1,4 @@
+include README.md
+recursive-include jupyter_spark/static *.js
+recursive-include notebooks *.ipynb
+recursive-include screenshots *.png
