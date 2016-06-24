@@ -21,10 +21,10 @@ class SparkHandler(IPythonHandler):
         self.full_url = url_path_join(self.url, self.prefix)
 
     def get(self):
-        if not self.request.uri.startswith(self.prefix):
-            raise_error('Request URI did not start with %s' % self.prefix)
+        if not self.request.uri.startswith(self.full_url): 
+            raise_error('Request URI did not start with %s' % self.full_url)
 
-        spark_url = self.host + self.request.uri[len(self.prefix):]
+        spark_url = self.host + self.request.uri[len(self.full_url):]
 
         try:
             spark_response = requests.get(spark_url)
@@ -32,7 +32,7 @@ class SparkHandler(IPythonHandler):
             content_type = spark_response.headers['content-type']
             self.set_header('Content-Type', content_type)
 
-            if 'text' in content_type:
+            if 'text/html' in content_type:
                 # Replace all the relative links with our proxy links
                 soup = BeautifulSoup(spark_response.text, 'html.parser')
 
