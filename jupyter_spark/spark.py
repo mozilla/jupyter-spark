@@ -21,7 +21,7 @@ class SparkHandler(IPythonHandler):
         self.full_url = url_path_join(self.url, self.prefix)
 
     def get(self):
-        if not self.request.uri.startswith(self.full_url): 
+        if not self.request.uri.startswith(self.full_url):
             raise_error('Request URI did not start with %s' % self.full_url)
 
         spark_url = self.host + self.request.uri[len(self.full_url):]
@@ -36,15 +36,11 @@ class SparkHandler(IPythonHandler):
                 # Replace all the relative links with our proxy links
                 soup = BeautifulSoup(spark_response.text, 'html.parser')
 
-                for has_href in ['a', 'link']:
-                    for a in soup.find_all(has_href):
-                        if 'href' in a.attrs:
-                            a['href'] = url_path_join(self.full_url, a['href'])
+                for link in soup.find_all(['a', 'link'], href=True):
+                    link['href'] = url_path_join(self.full_url, link['href'])
 
-                for has_src in ['img', 'script']:
-                    for a in soup.find_all(has_src):
-                        if 'src' in a.attrs:
-                            a['src'] = url_path_join(self.full_url, a['src'])
+                for image in soup.find_all(['img', 'script'], src=True):
+                    image['src'] = url_path_join(self.full_url, image['src'])
 
                 client_response = str(soup)
             else:
