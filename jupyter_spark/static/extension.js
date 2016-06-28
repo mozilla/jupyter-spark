@@ -168,7 +168,7 @@ define([
         var cell = data.cell;
         if (is_spark_cell(cell)) {
             window.clearInterval(current_update_frequency);
-            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE);
+            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE, api_url);
             cell_queue.push(cell);
             current_cell = cell_queue[0];
             add_progress_bar(current_cell);
@@ -255,7 +255,7 @@ define([
             add_progress_bar(current_cell);
         } else {
             window.clearInterval(current_update_frequency);
-            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY);
+            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY, api_url);
         };
     };
 
