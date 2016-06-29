@@ -36,6 +36,14 @@ jupyter nbextension list
 jupyter serverextension list
 ```
 
+Pleaes feel free to install [lxml](http://lxml.de/) as well to improve
+performance of the server side communication to Spark using your favorite
+package manager, e.g.:
+
+```
+pip install lxml
+```
+
 For development and testing, clone the project and run from a shell in the
 project's root directory:
 

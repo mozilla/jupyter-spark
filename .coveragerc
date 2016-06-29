@@ -1,0 +1,12 @@
+[run]
+branch = True
+source = jupyter_spark
+
+[paths]
+source =
+   src/jupyter_spark
+   .tox/*/lib/python*/site-packages/jupyter_spark
+   .tox/pypy*/site-packages/jupyter_spark
+
+[report]
+show_missing = True

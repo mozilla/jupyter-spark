@@ -1,5 +1,3 @@
-from notebook.utils import url_path_join
-
 from .spark import SparkHandler
 
 
@@ -24,17 +22,16 @@ def _jupyter_server_extension_paths():
 def load_jupyter_server_extension(nbapp):
     # Extract our Spark server details from the config:
     config = nbapp.config['NotebookApp']
-    host = config.get('spark_host', 'http://localhost:4040')
-    prefix = config.get('spark_prefix', '/spark')
+    spark_url = config.get('spark_url', 'http://localhost:4040')
+    spark_endpoint = config.get('spark_endpoint', '/spark')
 
-    url = nbapp.web_app.settings['base_url']
     nbapp.web_app.add_handlers(
         r'.*',  # match any host
         [
-            (url_path_join(url, prefix) + '.*', SparkHandler, {
-                'host': host,
-                'url': url,
-                'prefix': prefix,
+            (spark_endpoint + '.*', SparkHandler, {
+                'base_url': nbapp.web_app.settings['base_url'],
+                'spark_url': spark_url,
+                'spark_endpoint': spark_endpoint,
             }),
         ]
     )
