@@ -22,6 +22,7 @@ class SparkProxy(object):
     """
     def __init__(self, endpoint_url):
         self.endpoint_url = endpoint_url
+        self.session = requests.Session()
 
     def fail(self):
         raise tornado.web.HTTPError(
@@ -39,7 +40,7 @@ class SparkProxy(object):
             self.fail()
         spark_url = spark_url + request_uri[len(self.endpoint_url):]
         try:
-            response = requests.get(spark_url)
+            response = self.session.get(spark_url)
             content_type = response.headers['content-type']
 
             if 'text/html' in content_type:
