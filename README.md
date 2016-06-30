@@ -83,10 +83,14 @@ jupyter notebook --Spark.url="http://localhost:4040"
 
 - Refactored to fix a bunch of Python packaging issues
 
-- Requires manual step to enable after running pip install
-  (see installation docs)
+- Added tests
 
-- To update:
+- Added ability to override Spark API URL via command line option
+
+- *IMPORTANT* Requires manual step to enable after running pip install
+  (see installation docs)!
+
+  To update:
 
   1. Run `pip uninstall jupyter-spark`
   2. Delete `spark.js` from your `nbextensions` folder.
