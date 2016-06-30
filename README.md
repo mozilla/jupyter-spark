@@ -33,7 +33,7 @@ jupyter nbextension install --py jupyter_spark
 jupyter nbextension enable --py jupyter_spark
 ```
 
-You __may also__ have to `widgetsnbextension` extension if it hasn't been enabled
+You **may also** have to `widgetsnbextension` extension if it hasn't been enabled
 before (check by running `jupyter nbextension list`):
 
 ```
@@ -83,18 +83,21 @@ override the `Spark.url` config value, e.g. on the command line:
 jupyter notebook --Spark.url="http://localhost:4040"
 ```
 
-
 ## Changelog
 
-### 0.2 (unreleased)
+### 0.2.0 (2016-06-30)
 
-- Refactored to fix a bunch of Python packaging issues
+- Refactored to fix a bunch of Python packaging and code quality issues
 
-- Added tests
+- Added test suite for Python code
+
+- Set up continuous integration: https://travis-ci.org/mozilla/jupyter-spark
+
+- Set up code coverage reports: https://codecov.io/gh/mozilla/jupyter-spark
 
 - Added ability to override Spark API URL via command line option
 
-- *IMPORTANT* Requires manual step to enable after running pip install
+- **IMPORTANT** Requires manual step to enable after running pip install
   (see installation docs)!
 
   To update:
@@ -105,6 +108,7 @@ jupyter notebook --Spark.url="http://localhost:4040"
      `jupyter_notebook_config.json` (in your .jupyter directory)
   4. Delete any references to `spark` in `notebook.json`
      (in .jupyter/nbconfig)
+  5. Follow installation instructions to reinstall
 
 ### 0.1.1 (2016-05-03)
 

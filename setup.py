@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='jupyter-spark',
-    version='0.2a2',
+    version='0.2.0',
     description='Jupyter Notebook extension for Apache Spark integration',
     author='Mozilla Firefox Data Platform',
     author_email='fx-data-platform@mozilla.com',
