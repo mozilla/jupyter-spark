@@ -2,10 +2,10 @@ from setuptools import find_packages, setup
 
 setup(
     name='jupyter-spark',
-    version='0.2a1',
+    version='0.2a2',
     description='Jupyter Notebook extension for Apache Spark integration',
-    author='Mozilla Telemetry',
-    author_email='telemetry@lists.mozilla.org',
+    author='Mozilla Firefox Data Platform',
+    author_email='fx-data-platform@mozilla.com',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
