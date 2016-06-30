@@ -63,6 +63,16 @@ jupyter nbextension uninstall --py jupyter_spark
 pip uninstall jupyter-spark
 ```
 
+## Configuration
+
+To change the URL of the Spark API that the job metadata is fetched from
+override the `Spark.url` config value, e.g. on the command line:
+
+```
+jupyter notebook --Spark.url="http://localhost:4040"
+```
+
+
 ## Changelog
 
 ### 0.2 (unreleased)

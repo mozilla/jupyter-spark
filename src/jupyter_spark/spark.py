@@ -3,8 +3,9 @@ import json
 import requests
 import tornado
 from bs4 import BeautifulSoup
-from notebook.base.handlers import IPythonHandler
 from notebook.utils import url_path_join
+from traitlets.config import LoggingConfigurable
+from traitlets.traitlets import Unicode
 
 # try importing lxml and use it as the BeautifulSoup builder if available
 try:
@@ -15,13 +16,25 @@ else:
     BEAUTIFULSOUP_BUILDER = 'lxml'  # pragma: no cover
 
 
-class SparkProxy(object):
+class Spark(LoggingConfigurable):
     """
     A proxy for requests from the extension frontend to Spark that
     replaces URLs on the fly.
     """
-    def __init__(self, endpoint_url):
-        self.endpoint_url = endpoint_url
+    url = Unicode(
+        'http://localhost:4040',
+        help='The URL of Spark API',
+    ).tag(config=True)
+
+    endpoint = Unicode(
+        '/spark',
+        help='The URL path under which the Spark API will be proxied',
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.base_url = kwargs.pop('base_url')
+        super(Spark, self).__init__(*args, **kwargs)
+        self.endpoint_url = url_path_join(self.base_url, self.endpoint)
         self.session = requests.Session()
 
     def fail(self):
@@ -30,7 +43,7 @@ class SparkProxy(object):
             'ERROR: Request URI did not start with %s' % self.endpoint_url
         )
 
-    def fetch(self, request_uri, spark_url):
+    def fetch(self, request_uri):
         """
         Fetch the requested URI from the Spark API, replace the
         URLs in the response content for HTML responses or return
@@ -38,7 +51,7 @@ class SparkProxy(object):
         """
         if not request_uri.startswith(self.endpoint_url):
             self.fail()
-        spark_url = spark_url + request_uri[len(self.endpoint_url):]
+        spark_url = self.url + request_uri[len(self.endpoint_url):]
         try:
             response = self.session.get(spark_url)
             content_type = response.headers['content-type']
@@ -67,18 +80,3 @@ class SparkProxy(object):
         for image in soup.find_all(['img', 'script'], src=True):
             image['src'] = url_path_join(self.endpoint_url, image['src'])
         return str(soup)
-
-
-class SparkHandler(IPythonHandler):
-
-    def initialize(self, base_url, spark_url, spark_endpoint):
-        self.spark_url = spark_url
-        self.proxy = SparkProxy(url_path_join(base_url, spark_endpoint))
-
-    def get(self):
-        content, content_type = self.proxy.fetch(
-            self.request.uri,
-            self.spark_url,
-        )
-        self.set_header('Content-Type', content_type)
-        self.write(content)
