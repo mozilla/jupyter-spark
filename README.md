@@ -33,7 +33,7 @@ jupyter nbextension install --py jupyter_spark
 jupyter nbextension enable --py jupyter_spark
 ```
 
-You **may also** have to `widgetsnbextension` extension if it hasn't been enabled
+You **may also** have to enable the `widgetsnbextension` extension if it hasn't been enabled
 before (check by running `jupyter nbextension list`):
 
 ```
