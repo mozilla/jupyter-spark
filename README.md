@@ -1,5 +1,9 @@
 # jupyter-spark
 
+[![Build Status](https://travis-ci.org/mozilla/jupyter-spark.svg?branch=master)](https://travis-ci.org/mozilla/jupyter-spark)
+
+[![codecov](https://codecov.io/gh/mozilla/jupyter-spark/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/jupyter-spark)
+
 Jupyter Notebook extension for Apache Spark integration.
 
 Includes a progress indicator for the current Notebook cell if it invokes a
