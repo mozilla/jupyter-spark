@@ -1,100 +1,114 @@
 # -*- coding: utf-8 -*-
 import pytest
-import requests
 import six
 import tornado
+import tornado.httpclient
+import tornado.testing
+import tornado.web
 from bs4 import BeautifulSoup
-from httmock import HTTMock, urlmatch
+from jupyter_spark.handlers import SparkHandler
 from jupyter_spark.spark import BEAUTIFULSOUP_BUILDER, Spark
-from notebook.utils import url_path_join
 
 
-SPARK_ENDPOINT = '/spark'
-SPARK_URL = 'http://localhost:4040'
-BASE_URL = 'http://localhost:8888'
-FULL_URL = url_path_join(BASE_URL, SPARK_ENDPOINT)
-RESPONSE_CONTENT = '<img src="/image.png" />'
+PROXY_PREFIX = "/proxy/application_1234556789012_3456"
+spark = Spark(base_url='http://localhost:8888')
 
 
-@pytest.fixture
-def spark():
-    return Spark(base_url=BASE_URL)
+class FakeHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.set_header('Content-Type', self.CONTENT_TYPE)
+        self.write(self.RESPONSE)
 
 
-@urlmatch(path=r'^/success$')
-def successful_response(url, request):
-    return {'status_code': 200,
-            'content': RESPONSE_CONTENT,
-            'headers': {'content-type': 'text/html'}}
+class FakeReplaceHandler(FakeHandler):
+    handler_root = '/backend/replace'
+    RESPONSE = six.b('<img src="/image.png" />')
+    REPLACED = six.b('<img src="/spark/image.png"/>')
+    CONTENT_TYPE = 'text/html'
 
 
-def test_successful_response(spark):
-    with HTTMock(successful_response):
-        content, content_type = spark.fetch(FULL_URL + '/success')
-        assert content_type == 'text/html'
-        assert six.u(FULL_URL) in content
+class FakeVerbatimHandler(FakeHandler):
+    handler_root = '/backend/verbatim'
+    RESPONSE = six.b('<a href="/">Hello, world!</a>')
+    CONTENT_TYPE = 'plain/text'
 
 
-def test_request_uri_prefix(spark):
-    with HTTMock(successful_response):
-        with pytest.raises(tornado.web.HTTPError) as excinfo:
-            spark.fetch(BASE_URL + '/false/prefix')
-        assert 'Request URI did not start with' in str(excinfo.value)
+class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
 
+    def get_app(self):
+        port = self.get_http_port()
+        base_url = 'http://localhost:%s' % port
+        self.spark = Spark(base_url=base_url)
+        return tornado.web.Application([
+            (spark.proxy_root + '.*', SparkHandler, {'spark': self.spark}),
+            (FakeReplaceHandler.handler_root, FakeReplaceHandler),
+            (FakeVerbatimHandler.handler_root, FakeVerbatimHandler),
+        ])
 
-@urlmatch(path=r'^/wrong$')
-def wrong_content_type(url, request):
-    return {'status_code': 200,
-            'content': RESPONSE_CONTENT,
-            'headers': {'content-type': 'special/test'}}
+    def test_http_fetch_error(self):
+        response = self.fetch(self.spark.proxy_root)
+        self.assertEqual(response.code, 200)
+        self.assertIn(six.b('SPARK_NOT_RUNNING'), response.body)
 
+    def test_http_fetch_replace_success(self):
+        self.spark.url = self.spark.base_url + FakeReplaceHandler.handler_root
+        response = self.fetch(self.spark.proxy_root)
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.body, FakeReplaceHandler.RESPONSE)
+        self.assertEqual(response.body, FakeReplaceHandler.REPLACED)
+        self.assertEqual(response.headers['Content-Type'],
+                         FakeReplaceHandler.CONTENT_TYPE)
 
-def test_wrong_content_type(spark):
-    with HTTMock(wrong_content_type):
-        content, content_type = spark.fetch(FULL_URL + '/wrong')
-        assert content_type == 'special/test'
-        assert six.u(FULL_URL) not in content  # replacement didn't happen
+    def test_http_fetch_verbatim_success(self):
+        self.spark.url = self.spark.base_url + FakeVerbatimHandler.handler_root
+        response = self.fetch(self.spark.proxy_root)
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.body, FakeVerbatimHandler.RESPONSE)
+        self.assertEqual(response.headers['Content-Type'],
+                         FakeVerbatimHandler.CONTENT_TYPE)
 
-
-@urlmatch(path=r'^/exception$')
-def requests_exception(url, request):
-    raise requests.exceptions.RequestException(500, 'error')
-
-
-def test_requests_exception(spark):
-    with HTTMock(requests_exception):
-        content, content_type = spark.fetch(FULL_URL + '/exception')
-        assert content_type == 'application/json'
-        assert 'SPARK_NOT_RUNNING' in content
+    def test_spark_backend_url(self):
+        class FakeRequest(object):
+            # http://localhost:8888/spark/api
+            uri = self.spark.base_url + self.spark.proxy_root + '/api'
+        fake_request = FakeRequest()
+        self.assertEqual(self.spark.backend_url(fake_request),
+                         self.spark.url + '/api')
 
 
 @pytest.mark.parametrize('content', [
-    '<a href="/page/">page</a>',
-    '<link rel="stylesheet" href="/styles.css" />',
-    six.u('<a href="/über-uns/">Über uns</a>'),
+    '<a href="{prefix}/page/">page</a>',
+    '<link rel="stylesheet" href="{prefix}/styles.css" />',
+    six.u('<a href="{prefix}/über-uns/">Über uns</a>'),
     # missing href attribute so expected to fail:
-    pytest.mark.xfail('<a>page</a>'),
-    pytest.mark.xfail('<link rel="stylesheet" data-href="/styles.css" />'),
+    pytest.mark.xfail('<a data-href="{prefix}/page/">page</a>'),
+    pytest.mark.xfail('<link rel="stylesheet" data-href="{prefix}/styles.css" />'),
+    # fails because the URL path doesn't start with the prefix
+    pytest.mark.xfail('<a href="/something/completely/">different</a>'),
 ])
-def test_replace_href_tags(content, spark):
+def test_replace_href_tags(content):
+    content = content.format(prefix=PROXY_PREFIX)
     replaced = spark.replace(content)
     assert replaced != content
     soup = BeautifulSoup(replaced, BEAUTIFULSOUP_BUILDER)
     for tag in soup.find_all(['a', 'link']):
-        assert tag.attrs['href'].startswith(FULL_URL)
+        assert tag.attrs['href'].startswith(spark.proxy_root)
 
 
 @pytest.mark.parametrize('content', [
-    '<img src="/img.png" />',
-    '<script src="/script.js" />',
-    six.u('<script src="/scrüpt.js" />'),
+    '<img src="{prefix}/img.png" />',
+    '<script src="{prefix}/script.js" />',
+    '<img src="/logo.png" />',
+    six.u('<script src="{prefix}/scrüpt.js" />'),
     # missing src attribute so expected to fail:
-    pytest.mark.xfail('<img data-src="/img.png" />'),
-    pytest.mark.xfail('<script data-src="/script.js" />'),
+    pytest.mark.xfail('<img data-src="{prefix}/img.png" />'),
+    pytest.mark.xfail('<script data-src="{prefix}/script.js" />'),
 ])
-def test_replace_src_tags(content, spark):
+def test_replace_src_tags(content):
+    content = content.format(prefix=PROXY_PREFIX)
     replaced = spark.replace(content)
     assert replaced != content
     soup = BeautifulSoup(replaced, BEAUTIFULSOUP_BUILDER)
     for tag in soup.find_all(['img', 'script']):
-        assert tag.attrs['src'].startswith(FULL_URL)
+        assert tag.attrs['src'].startswith(spark.proxy_root)

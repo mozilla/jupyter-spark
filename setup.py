@@ -14,7 +14,6 @@ setup(
         'ipython >= 4',
         'jupyter',
         'notebook >= 4.2',
-        'requests',
         'beautifulsoup4',
         'widgetsnbextension',
     ],

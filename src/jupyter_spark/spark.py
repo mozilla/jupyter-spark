@@ -1,7 +1,5 @@
-import json
+import re
 
-import requests
-import tornado
 from bs4 import BeautifulSoup
 from notebook.utils import url_path_join
 from traitlets.config import LoggingConfigurable
@@ -15,18 +13,27 @@ except ImportError:
 else:
     BEAUTIFULSOUP_BUILDER = 'lxml'  # pragma: no cover
 
+# a regular expression to match paths against the Spark on EMR proxy paths
+PROXY_PATH_RE = re.compile(r'\/proxy\/application_\d+_\d+\/(.*)')
+
+# a tuple of tuples with tag names and their attribute to automatically fix
+PROXY_ATTRIBUTES = (
+    (('a', 'link'), 'href'),
+    (('img', 'script'), 'src'),
+)
+
 
 class Spark(LoggingConfigurable):
     """
-    A proxy for requests from the extension frontend to Spark that
-    replaces URLs on the fly.
+    A config object that is able to replace URLs of the Spark frontend
+    on the fly.
     """
     url = Unicode(
         'http://localhost:4040',
         help='The URL of Spark API',
     ).tag(config=True)
 
-    endpoint = Unicode(
+    proxy_root = Unicode(
         '/spark',
         help='The URL path under which the Spark API will be proxied',
     )
@@ -34,49 +41,29 @@ class Spark(LoggingConfigurable):
     def __init__(self, *args, **kwargs):
         self.base_url = kwargs.pop('base_url')
         super(Spark, self).__init__(*args, **kwargs)
-        self.endpoint_url = url_path_join(self.base_url, self.endpoint)
-        self.session = requests.Session()
+        self.proxy_url = url_path_join(self.base_url, self.proxy_root)
 
-    def fail(self):
-        raise tornado.web.HTTPError(
-            500,
-            'ERROR: Request URI did not start with %s' % self.endpoint_url
-        )
-
-    def fetch(self, request_uri):
-        """
-        Fetch the requested URI from the Spark API, replace the
-        URLs in the response content for HTML responses or return
-        the verbatim response.
-        """
-        if not request_uri.startswith(self.endpoint_url):
-            self.fail()
-        spark_url = self.url + request_uri[len(self.endpoint_url):]
-        try:
-            response = self.session.get(spark_url)
-            content_type = response.headers['content-type']
-
-            if 'text/html' in content_type:
-                content = self.replace(response.text)
-            else:
-                # Probably binary response, send it directly.
-                content = response.text
-
-        except requests.exceptions.RequestException:
-            content = json.dumps({'error': 'SPARK_NOT_RUNNING'})
-            content_type = 'application/json'
-
-        return content, content_type
+    def backend_url(self, request):
+        request_path = request.uri[len(self.proxy_url):]
+        return url_path_join(self.url, request_path)
 
     def replace(self, content):
         """
-        Replace all the relative links with our proxy links
+        Replace all the links with our prefixed handler links, e.g.:
+
+        /proxy/application_1467283586194_0015/static/styles.css' or
+        /static/styles.css
+
+        with
+
+        /spark/static/styles.css
         """
         soup = BeautifulSoup(content, BEAUTIFULSOUP_BUILDER)
-
-        for link in soup.find_all(['a', 'link'], href=True):
-            link['href'] = url_path_join(self.endpoint_url, link['href'])
-
-        for image in soup.find_all(['img', 'script'], src=True):
-            image['src'] = url_path_join(self.endpoint_url, image['src'])
+        for tags, attribute in PROXY_ATTRIBUTES:
+            for tag in soup.find_all(tags, **{attribute: True}):
+                value = tag[attribute]
+                match = PROXY_PATH_RE.match(value)
+                if match is not None:
+                    value = match.groups()[0]
+                tag[attribute] = url_path_join(self.proxy_root, value)
         return str(soup)
