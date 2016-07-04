@@ -85,6 +85,17 @@ jupyter notebook --Spark.url="http://localhost:4040"
 
 ## Changelog
 
+### 0.3.0 (2016-07-04)
+
+- Rewrote proxy to use an async Tornado handler and HTTP client to fetch
+  responses from Spark.
+
+- Simplified proxy processing to take Amazon EMR proxying into account
+
+- Extended test suite to cover proxy handler, too.
+
+- Removed requests as a dependency.
+
 ### 0.2.0 (2016-06-30)
 
 - Refactored to fix a bunch of Python packaging and code quality issues
