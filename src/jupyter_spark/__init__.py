@@ -29,6 +29,6 @@ def load_jupyter_server_extension(nbapp):  # pragma: no cover
 
     nbapp.web_app.add_handlers(
         r'.*',  # match any host
-        [(spark.proxy_root + '.*', SparkHandler, {'spark': spark})]
+        [(spark.proxy_url + '.*', SparkHandler, {'spark': spark})]
     )
     nbapp.log.info("Jupyter-Spark enabled!")
