@@ -31,14 +31,15 @@ pip install jupyter-spark
 jupyter serverextension enable --py jupyter_spark
 jupyter nbextension install --py jupyter_spark
 jupyter nbextension enable --py jupyter_spark
-```
-
-You **may also** have to enable the `widgetsnbextension` extension if it hasn't been enabled
-before (check by running `jupyter nbextension list`):
-
-```
 jupyter nbextension enable --py widgetsnbextension
 ```
+
+The last step is needed to enable the `widgetsnbextension` extension that
+Jupyter-Spark depends on. It may have been enabled before by a different
+extension.
+
+You may want to append ``--user`` to the commands above if you're getting
+configuration errors upon invoking them.
 
 To double-check if the extension was correctly installed run:
 
