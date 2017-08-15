@@ -208,7 +208,7 @@ define([
         if (progress_bar.length < 1) {
             console.log("No progress bar found");
         };
-        update_progress_count(current_cell);
+        update_progress_count(current_cell, job.jobId);
 
         var progress = completed / total * 100;
         progress_bar.show();
@@ -219,18 +219,23 @@ define([
             .text(completed + ' out of ' + total + ' tasks');
     };
 
-    var update_progress_count = function(cell) {
+    var update_progress_count = function(cell, jobId) {
         var progress_count = cell.element.find('.progress_counter');
         if (progress_count.length < 1) {
             console.log("No progress counter found");
         };
         var job_name = "";
+        var canceller = null;
         if (spark_is_running) {
             cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
             job_name =  ": " + cache[0].jobs[0].name
+            canceller = $('<a href="#">Cancel</a>').on(
+                'click',
+                function () { $.get(base_url + "spark/jobs/job/kill?id=" + jobId)});
         };
 
         progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
+        progress_count.append(canceller)
         progress_count.show();
     };
 
