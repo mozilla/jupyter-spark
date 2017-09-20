@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from jupyter_spark.handlers import SparkHandler
 from jupyter_spark.spark import BEAUTIFULSOUP_BUILDER, Spark
 
-
 PROXY_PREFIX = "/proxy/application_1234556789012_3456"
 spark = Spark(base_url='http://localhost:8888')
 
