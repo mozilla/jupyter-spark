@@ -211,12 +211,12 @@ define([
         update_progress_count(current_cell);
 
         var progress = completed / total * 100;
-        progress_bar.attr('class', 'progress');
         progress_bar.show();
-        progress_bar.addClass('progress-bar ' + get_status_class(job.status))
-                    .attr('aria-valuenow', progress)
-                    .css('width', progress + '%')
-                    .text(completed + ' out of ' + total + ' tasks');
+        progress_bar.find('.progress-bar')
+            .attr('class', 'progress-bar ' + get_status_class(job.status))
+            .attr('aria-valuenow', progress)
+            .css('width', progress + '%')
+            .text(completed + ' out of ' + total + ' tasks');
     };
 
     var update_progress_count = function(cell) {
