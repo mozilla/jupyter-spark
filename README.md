@@ -84,6 +84,11 @@ override the `Spark.url` config value, e.g. on the command line:
 jupyter notebook --Spark.url="http://localhost:4040"
 ```
 
+## Example
+
+There is a simple `pyspark` example included in `examples` to confirm that your
+installation is working.
+
 ## Changelog
 
 ### 0.3.0 (2016-07-04)
