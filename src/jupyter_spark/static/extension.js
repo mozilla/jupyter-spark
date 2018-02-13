@@ -130,7 +130,9 @@ var create_progress_bar = function(status_class, completed, total) {
         .attr('aria-valuenow', progress)
         .attr('aria-valuemin', 0)
         .attr('aria-valuemax', 100)
-        .css('width', progress + '%')
+        .css({'width': progress + '%',
+              'white-space': 'nowrap',
+              'overflow': 'visible'});
     if (status_class == 'progress-bar-warning') {
         progress_bar.text('Loading Spark...');
     } else {
@@ -183,19 +185,23 @@ define([
             if (spark_is_running) {
                 jobs_in_cache = cache[0].jobs.length;
             };
+            var panel = $('<div/>')
+                .addClass('panel')
+                .addClass('panel-default')
+                .addClass('progress-panel')
+                .css({'margin-bottom': '0'})
+                .hide();
             var jobs_completed_container = $('<div/>')
                 .addClass('progress_counter')
-                .css({'border': 'none', 'border-top': '1px solid #cfcfcf', 'padding-left': '10px'})
-                .text(PROGRESS_COUNT_TEXT + cell_jobs_counter)
-                .hide();
+                .addClass('panel-heading')
+                .text(PROGRESS_COUNT_TEXT + cell_jobs_counter);
             var progress_bar_container = $('<div/>')
-                .addClass('progress-container')
-                .css({'border': 'none', 'border-top': '1px solid #cfcfcf'})
+                .addClass('progress-container');
             progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
-            progress_bar.hide();
             progress_bar.appendTo(progress_bar_container);
-            jobs_completed_container.appendTo(input_area);
-            progress_bar_container.appendTo(input_area);
+            jobs_completed_container.appendTo(panel);
+            progress_bar_container.appendTo(panel);
+            panel.appendTo(input_area);
         };
     };
 
@@ -208,7 +214,7 @@ define([
         if (progress_bar.length < 1) {
             console.log("No progress bar found");
         };
-        update_progress_count(current_cell);
+        update_progress_count(current_cell, job.jobId);
 
         var progress = completed / total * 100;
         progress_bar.show();
@@ -219,30 +225,33 @@ define([
             .text(completed + ' out of ' + total + ' tasks');
     };
 
-    var update_progress_count = function(cell) {
+    var update_progress_count = function(cell, jobId) {
         var progress_count = cell.element.find('.progress_counter');
         if (progress_count.length < 1) {
             console.log("No progress counter found");
         };
         var job_name = "";
+        var canceller = null;
         if (spark_is_running) {
             cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
             job_name =  ": " + cache[0].jobs[0].name
+            canceller = $('<a href="#" class="btn btn-default btn-xs pull-right">Cancel</a>').on(
+                'click',
+                function () { $.get(base_url + "spark/jobs/job/kill?id=" + jobId)});
         };
 
         progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
-        progress_count.show();
+        progress_count.append(canceller)
+        cell.element.find('.progress-panel').show();
     };
 
     var remove_progress_bar = function() {
         if (current_cell != null) {
-            var progress_bar_div = current_cell.element.find('.progress-container');
-            var progress_count = current_cell.element.find('.progress_counter');
-            if (progress_bar_div.length < 1) {
+            var progress_panel = current_cell.element.find('.progress-panel');
+            if (progress_panel.length < 1) {
                 console.log("No progress bar found");
             };
-            progress_count.remove();
-            progress_bar_div.remove();
+            progress_panel.remove();
 
             start_next_progress_bar();
         }
