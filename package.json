@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "eslint": "^4.17.0",
+    "eslint-plugin-amd-imports": "^4.0.0"
+  }
+}
