@@ -2,14 +2,24 @@ language: python
 sudo: false
 cache: pip
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "pypy"
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+- pypy
 install:
-  - pip install tox-travis
+- pip install tox-travis
 script:
-  - tox -v
+- tox -v
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash)
+deploy:
+  provider: pypi
+  user: jezdez
+  distributions: sdist bdist_wheel
+  password:
+    secure: 0WAa8nmsv3VE/sKgd6AYLXJFujUe0YSo11shN2G7EarVlB/d0TLdU/ZyY5C5ClKutMTgnjlcpaCzgImMh86tA0W0lb3n2o5M7ssyIbOqKSIUPZBOFmqFJ2F9Wy01Woj0V+gQx6gS5U7lntTjNFbYnycH801FXrhub0ZMLynDO5y5fy2p91Qu9qMOs+gahSyb0KrkzQCXXLlaqwhmKAwfYj0JjrEuKTe/ltRlz/Ffw01cpJJoU2j+SophMCcd4taM4ESW0eAuXjDf3XmxZY2oSYTEDIhJATmgi3Y+I7TxI5N9/PJSyeuVnxP2uL+rs1iaZWWBD2SJPO4jvlliUwbapOqZG7MSP15OaGeKST6vSdxLp17zFXVhXSXOhUJTFQ1uPtmddt9hTNTnQbXcZRLz1oqomSt39+f/MH7RhAEJiqL+7qJPtp3AtFDX0AW/LBvgNO4i0tc3RxCIF00urMTHgk8HHKUa7wGEJ6R5qmNClihu2KkVNqRIGAATe7VDwqr990IADGl1cGL5yy+HTj2GtCdLPaxJuz9/Pv3YNUFusWbL4YXQQqxPRS3dSoUZ0zYEW8KGJsAMCpWJYyvUkzLnub3GZTm79Pty6PiNuuO3kmu/wSjztYgc0cfPygJdIy9Xw6j9qM4JT6oBVyA1vOFXIJ4IeFcq/wvQANXsBClpzqQ=
+  on:
+    tags: true
+    repo: mozilla/jupyter-spark
+    python: '3.5'

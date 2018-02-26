@@ -1,5 +1,10 @@
-from .handlers import SparkHandler
-from .spark import Spark
+from pkg_resources import get_distribution, DistributionNotFound
+
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
 
 
 def _jupyter_nbextension_paths():  # pragma: no cover
@@ -21,6 +26,9 @@ def _jupyter_server_extension_paths():  # pragma: no cover
 
 
 def load_jupyter_server_extension(nbapp):  # pragma: no cover
+    from .spark import Spark
+    from .handlers import SparkHandler
+
     spark = Spark(
         # add access to NotebookApp config, too
         parent=nbapp,
