@@ -42,11 +42,11 @@ var update_cache = function(api_url, callbacks) {
                     num_completed++;
                     if (num_completed === num_applications && cbs) {
                         cbs.fire(cache);
-                    };
+                    }
                     // Update progress bars if jobs have been run and there are cells to be updated
                     if (jobs.length > jobs_in_cache && cell_queue.length > 0 ) {
                         $(document).trigger('update.progress.bar');
-                    };
+                    }
                 });
             });
         } else {
@@ -58,7 +58,7 @@ var update_cache = function(api_url, callbacks) {
 var update_dialog_contents = function() {
     if ($('#dialog_contents').length) {
         var element = $('<div/>').attr('id', 'dialog_contents');
-        cache.forEach(function(application, i){
+        cache.forEach(function(application){
             element.append(create_application_table(application));
         });
 
@@ -77,7 +77,7 @@ var create_application_table = function(e) {
     header_row.append($('<th/>').text('Progress'));
     application_table.append(header_row);
 
-    e.jobs.forEach(function(job, i) {
+    e.jobs.forEach(function(job) {
         application_table.append(create_table_row(job));
     });
 
@@ -101,18 +101,18 @@ var create_table_row = function(e) {
 var get_status_class = function(status) {
     var status_class;
     switch(status) {
-        case 'SUCCEEDED':
-            status_class = 'progress-bar-success';
-            break;
-        case 'RUNNING':
-            status_class = 'progress-bar-info';
-            break;
-        case 'FAILED':
-            status_class = 'progress-bar-danger';
-            break;
-        case 'UNKNOWN':
-            status_class = 'progress-bar-warning';
-            break;
+    case 'SUCCEEDED':
+        status_class = 'progress-bar-success';
+        break;
+    case 'RUNNING':
+        status_class = 'progress-bar-info';
+        break;
+    case 'FAILED':
+        status_class = 'progress-bar-danger';
+        break;
+    case 'UNKNOWN':
+        status_class = 'progress-bar-warning';
+        break;
     }
     return status_class;
 }
@@ -131,13 +131,13 @@ var create_progress_bar = function(status_class, completed, total) {
         .attr('aria-valuemin', 0)
         .attr('aria-valuemax', 100)
         .css({'width': progress + '%',
-              'white-space': 'nowrap',
-              'overflow': 'visible'});
+            'white-space': 'nowrap',
+            'overflow': 'visible'});
     if (status_class == 'progress-bar-warning') {
         progress_bar.text('Loading Spark...');
     } else {
         progress_bar.text(completed + ' out of ' + total + ' tasks');
-    };
+    }
     progress_bar_div.append(progress_bar);
     return progress_bar_div;
 };
@@ -145,18 +145,19 @@ var create_progress_bar = function(status_class, completed, total) {
 
 define([
     'jquery',
+    'base/js/namespace',
     'base/js/dialog',
     'base/js/events',
     'base/js/utils',
     'notebook/js/codecell'
-], function ($, dialog, events, utils, codecell) {
+], function ($, Jupyter, dialog, events, utils, codecell) {
     var CodeCell = codecell.CodeCell;
     var base_url = utils.get_body_data('baseUrl') || '/';
     var api_url = base_url + 'spark/api/v1';
 
     var show_running_jobs = function() {
         var element = $('<div/>').attr('id', 'dialog_contents');
-        var modal = dialog.modal({
+        dialog.modal({
             title: "Running Spark Jobs",
             body: element,
             buttons: {
@@ -174,7 +175,7 @@ define([
             cell_queue.push(cell);
             current_cell = cell_queue[0];
             add_progress_bar(current_cell);
-        };
+        }
     };
 
     var add_progress_bar = function(cell) {
@@ -184,7 +185,7 @@ define([
             cell_jobs_counter = 0;
             if (spark_is_running) {
                 jobs_in_cache = cache[0].jobs.length;
-            };
+            }
             var panel = $('<div/>')
                 .addClass('panel')
                 .addClass('panel-default')
@@ -197,12 +198,12 @@ define([
                 .text(PROGRESS_COUNT_TEXT + cell_jobs_counter);
             var progress_bar_container = $('<div/>')
                 .addClass('progress-container');
-            progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
+            var progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
             progress_bar.appendTo(progress_bar_container);
             jobs_completed_container.appendTo(panel);
             progress_bar_container.appendTo(panel);
             panel.appendTo(input_area);
-        };
+        }
     };
 
     var update_progress_bar = function() {
@@ -211,9 +212,6 @@ define([
         var total = job.numTasks;
 
         var progress_bar = current_cell.element.find('.progress');
-        if (progress_bar.length < 1) {
-            console.log("No progress bar found");
-        };
         update_progress_count(current_cell, job.jobId);
 
         var progress = completed / total * 100;
@@ -227,9 +225,6 @@ define([
 
     var update_progress_count = function(cell, jobId) {
         var progress_count = cell.element.find('.progress_counter');
-        if (progress_count.length < 1) {
-            console.log("No progress counter found");
-        };
         var job_name = "";
         var canceller = null;
         if (spark_is_running) {
@@ -238,7 +233,7 @@ define([
             canceller = $('<a href="#" class="btn btn-default btn-xs pull-right">Cancel</a>').on(
                 'click',
                 function () { $.get(base_url + "spark/jobs/job/kill?id=" + jobId)});
-        };
+        }
 
         progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
         progress_count.append(canceller)
@@ -248,9 +243,6 @@ define([
     var remove_progress_bar = function() {
         if (current_cell != null) {
             var progress_panel = current_cell.element.find('.progress-panel');
-            if (progress_panel.length < 1) {
-                console.log("No progress bar found");
-            };
             progress_panel.remove();
 
             start_next_progress_bar();
@@ -265,7 +257,7 @@ define([
         } else {
             window.clearInterval(current_update_frequency);
             current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY, api_url);
-        };
+        }
     };
 
     var is_spark_cell = function(cell) {

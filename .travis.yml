@@ -27,3 +27,17 @@ jobs:
         on:
           tags: true
           repo: mozilla/jupyter-spark
+matrix:
+  include:
+  - env: eslint
+    sudo: false
+    cache:
+      directories:
+      - node_modules # NPM packages
+    install:
+      - nvm install 8
+      - npm install
+    script:
+      - node ./node_modules/eslint/bin/eslint.js --ext .js src/jupyter_spark/static
+allow_failures:
+  - env: eslint
