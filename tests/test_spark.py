@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import quote
+
 import pytest
 import six
 import tornado
@@ -16,9 +18,6 @@ spark = Spark(base_url='http://localhost:8888')
 class FakeHandler(tornado.web.RequestHandler):
 
     def get(self):
-        spark_url = self.get_argument("spark_url", None)
-        with open("/tmp/log.log", "a") as fd:
-            fd.write("A) spark_url = %s\n" % spark_url)
         self.set_header('Content-Type', self.CONTENT_TYPE)
         self.write(self.RESPONSE)
 
@@ -54,15 +53,14 @@ class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
         self.assertIn(six.b('SPARK_URL_MISSING'), response.body)
 
     def test_http_fetch_error_not_running(self):
-        response = self.fetch(self.spark.proxy_root + "?spark_url=http%3A//localhost%3A4040")
+        spark_ui_url = "http://localhost:4040"
+        response = self.fetch(self.spark.proxy_root + "?spark_url=%s" % quote(spark_ui_url))
         self.assertEqual(response.code, 200)
         self.assertIn(six.b('SPARK_NOT_RUNNING'), response.body)
 
     def test_http_fetch_replace_success(self):
-        self.spark.url = self.spark.base_url + FakeReplaceHandler.handler_root
-        response = self.fetch(self.spark.proxy_root + "?spark_url=http%3A//localhost%3A4040")
-        with open("/tmp/log.log", "a") as fd:
-            fd.write("response = %s\n" % response.body)
+        url = self.spark.base_url + FakeReplaceHandler.handler_root
+        response = self.fetch(self.spark.proxy_root + "?spark_url=%s" % quote(url))
         self.assertEqual(response.code, 200)
         self.assertNotEqual(response.body, FakeReplaceHandler.RESPONSE)
         self.assertEqual(response.body, FakeReplaceHandler.REPLACED)
@@ -70,8 +68,8 @@ class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
                          FakeReplaceHandler.CONTENT_TYPE)
 
     def test_http_fetch_verbatim_success(self):
-        self.spark.url = self.spark.base_url + FakeVerbatimHandler.handler_root
-        response = self.fetch(self.spark.proxy_root + "?spark_url=http%3A//localhost%3A4040")
+        url = self.spark.base_url + FakeVerbatimHandler.handler_root
+        response = self.fetch(self.spark.proxy_root + "?spark_url=%s" % quote(url))
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, FakeVerbatimHandler.RESPONSE)
         self.assertEqual(response.headers['Content-Type'],
@@ -83,7 +81,7 @@ class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
             path = self.spark.proxy_root + '/api'
         fake_request = FakeRequest()
         self.assertEqual(self.spark.backend_url("http://localhost:4040", fake_request.path),
-                         "http://localhost:4040" + '/api')
+                         "http://localhost:4040/api")
 
 
 @pytest.mark.parametrize('content', [
