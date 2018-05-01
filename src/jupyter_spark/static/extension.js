@@ -11,6 +11,7 @@ var cache = [];
 var current_update_frequency;
 
 var spark_is_running = false;
+var spark_ui_url = null;
 var cell_queue = [];
 var current_cell;
 var cell_jobs_counter = 0;
@@ -28,31 +29,36 @@ var update_cache = function(api_url, callbacks) {
         cbs = $.Callbacks();
         cbs.add(callbacks);
     }
-    $.getJSON(api_url + '/applications').done(function(applications) {
-        var num_applications = cache.length;
-        var num_completed = 0;
-        // Check if Spark is running before processing applications
-        if(!applications.hasOwnProperty('error')){
-            spark_is_running = true;
-            applications.forEach(function(application, i) {
-                $.getJSON(api_url + '/applications/' + application.id + '/jobs').done(function (jobs) {
-                    cache[i] = application;
-                    cache[i].jobs = jobs;
+    if (spark_ui_url != null) {
+        var build_url = function (api_url, path) {
+            return api_url + path + '?spark_url=' + escape(spark_ui_url)
+        };
+        $.getJSON(build_url(api_url, '/applications')).done(function(applications) {
+            var num_applications = cache.length;
+            var num_completed = 0;
+            // Check if Spark is running before processing applications
+            if(!applications.hasOwnProperty('error')){
+                spark_is_running = true;
+                applications.forEach(function(application, i) {
+                    $.getJSON(build_url(api_url, '/applications/' + application.id + '/jobs')).done(function (jobs) {
+                        cache[i] = application;
+                        cache[i].jobs = jobs;
 
-                    num_completed++;
-                    if (num_completed === num_applications && cbs) {
-                        cbs.fire(cache);
-                    }
-                    // Update progress bars if jobs have been run and there are cells to be updated
-                    if (jobs.length > jobs_in_cache && cell_queue.length > 0 ) {
-                        $(document).trigger('update.progress.bar');
-                    }
+                        num_completed++;
+                        if (num_completed === num_applications && cbs) {
+                            cbs.fire(cache);
+                        }
+                        // Update progress bars if jobs have been run and there are cells to be updated
+                        if (jobs.length > jobs_in_cache && cell_queue.length > 0 ) {
+                            $(document).trigger('update.progress.bar');
+                        }
+                    });
                 });
-            });
-        } else {
-            spark_is_running = false;
-        }
-    });
+            } else {
+                spark_is_running = false;
+            }
+        });
+    }
 };
 
 var update_dialog_contents = function() {
@@ -154,6 +160,16 @@ define([
     var CodeCell = codecell.CodeCell;
     var base_url = utils.get_body_data('baseUrl') || '/';
     var api_url = base_url + 'spark/api/v1';
+
+    Jupyter.notebook.events.on('kernel_ready.Kernel', function () {
+        console.log("jupyter_spark: kernel ready, register comm target");
+        Jupyter.notebook.kernel.comm_manager.register_target('spark_comm', function (comm, msg) {
+            comm.on_msg(function (msg) {
+                console.log("spark_comm: spark_ui_url = " + msg.content.data.uiWebUrl)
+                spark_ui_url = msg.content.data.uiWebUrl;
+            });
+        });
+    });
 
     var show_running_jobs = function() {
         var element = $('<div/>').attr('id', 'dialog_contents');

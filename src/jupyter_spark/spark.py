@@ -28,11 +28,6 @@ class Spark(LoggingConfigurable):
     A config object that is able to replace URLs of the Spark frontend
     on the fly.
     """
-    url = Unicode(
-        'http://localhost:4040',
-        help='The URL of Spark API',
-    ).tag(config=True)
-
     proxy_root = Unicode(
         '/spark',
         help='The URL path under which the Spark API will be proxied',
@@ -43,9 +38,9 @@ class Spark(LoggingConfigurable):
         super(Spark, self).__init__(*args, **kwargs)
         self.proxy_url = url_path_join(self.base_url, self.proxy_root)
 
-    def backend_url(self, request):
-        request_path = request.uri[len(self.proxy_url):]
-        return url_path_join(self.url, request_path)
+    def backend_url(self, url, path):
+        request_path = path[len(self.proxy_root):]
+        return url_path_join(url, request_path)
 
     def replace(self, content):
         """
