@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from urllib.parse import quote
+try:
+    from urllib.parse import quote  # Python 3
+except ImportError:
+    from urllib import quote  # Python 2
 
 import pytest
 import six
