@@ -3,23 +3,7 @@ import "./spark.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import {
-    JupyterLab, JupyterLabPlugin
-} from '@jupyterlab/application';
-
-import {
-    NotebookActions, NotebookPanel, INotebookModel
-} from '@jupyterlab/notebook';
-
-import {
-    ToolbarButton
-} from '@jupyterlab/apputils';
-
-import {
-    IDisposable, DisposableDelegate
-} from '@phosphor/disposable';
-
-import {
-    Widget, PanelLayout
+    Widget
 } from '@phosphor/widgets';
 
 var common = require('./extension.js');
