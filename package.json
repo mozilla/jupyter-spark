@@ -1,4 +1,32 @@
 {
+  "private": true,
+  "name": "jupyter-spark",
+  "version": "0.4.0",
+  "description": "A Jupyter Notebook extension for Apache Spark integration",
+  "author": "Mozilla Firefox Data Platform",
+  "main": "src/jupyter_spark/static/jupyterlab-plugin.js",
+  "files": [
+    "src/jupyter_spark/static/extension.js",
+    "src/jupyter_spark/static/spark.css"
+  ],
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "jupyterlab": {
+    "extension": true
+  },
+  "scripts": {},
+  "dependencies": {
+    "@jupyterlab/application": "^0.16.3",
+    "@jupyterlab/apputils": "^0.16.4",
+    "@jupyterlab/docregistry": "^0.16.3",
+    "@jupyterlab/notebook": "^0.16.3",
+    "@phosphor/disposable": "^1.1.2",
+    "jquery": "^3.3.1",
+    "bootstrap": "^4.1.1"
+  },
   "devDependencies": {
     "eslint": "^4.17.0",
     "eslint-plugin-amd-imports": "^4.0.0"

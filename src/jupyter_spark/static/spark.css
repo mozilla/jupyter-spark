@@ -1,0 +1,7 @@
+#jupyter-spark {
+    display: flex;
+    flex-direction: column;
+    color: var(--jp-ui-font-color1);
+    background: var(--jp-layout-color1);
+    font-size: var(--jp-ui-font-size1);
+}

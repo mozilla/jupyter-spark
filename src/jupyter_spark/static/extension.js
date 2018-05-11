@@ -1,3 +1,9 @@
+if (window.Jupyter === undefined) {
+    // This is for JupyterLab only, which doesn't include jquery by default
+    var $ = require('jquery');
+}
+
+
 var UPDATE_FREQUENCY = 10000; // ms
 var UPDATE_FREQUENCY_ACTIVE = 500;
 var PROGRESS_COUNT_TEXT = "Running Spark job ";
@@ -56,13 +62,13 @@ var update_cache = function(api_url, callbacks) {
 };
 
 var update_dialog_contents = function() {
-    if ($('#dialog_contents').length) {
-        var element = $('<div/>').attr('id', 'dialog_contents');
+    if ($('#spark_dialog_contents').length) {
+        var element = $('<div/>').attr('id', 'spark_dialog_contents');
         cache.forEach(function(application){
             element.append(create_application_table(application));
         });
 
-        $('#dialog_contents').replaceWith(element);
+        $('#spark_dialog_contents').replaceWith(element);
     }
 };
 
@@ -143,148 +149,155 @@ var create_progress_bar = function(status_class, completed, total) {
 };
 
 
-define([
-    'jquery',
-    'base/js/namespace',
-    'base/js/dialog',
-    'base/js/events',
-    'base/js/utils',
-    'notebook/js/codecell'
-], function ($, Jupyter, dialog, events, utils, codecell) {
-    var CodeCell = codecell.CodeCell;
-    var base_url = utils.get_body_data('baseUrl') || '/';
-    var api_url = base_url + 'spark/api/v1';
+if (window.Jupyter !== undefined) {
+    var modules = [
+        'jquery',
+        'base/js/namespace',
+        'base/js/dialog',
+        'base/js/events',
+        'base/js/utils',
+        'notebook/js/codecell'
+    ];
+    define(modules, function ($, Jupyter, dialog, events, utils, codecell) {
+        var CodeCell = codecell.CodeCell;
+        var base_url = utils.get_body_data('baseUrl') || '/';
+        var api_url = base_url + 'spark/api/v1';
 
-    var show_running_jobs = function() {
-        var element = $('<div/>').attr('id', 'dialog_contents');
-        dialog.modal({
-            title: "Running Spark Jobs",
-            body: element,
-            buttons: {
-                "Close": {}
-            },
-            open: update_dialog_contents
-        });
-    };
+        var show_running_jobs = function() {
+            var element = $('<div/>').attr('id', 'spark_dialog_contents');
+            dialog.modal({
+                title: "Running Spark Jobs",
+                body: element,
+                buttons: {
+                    "Close": {}
+                },
+                open: update_dialog_contents
+            });
+        };
 
-    var spark_progress_bar = function(event, data) {
-        var cell = data.cell;
-        if (is_spark_cell(cell)) {
-            window.clearInterval(current_update_frequency);
-            current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE, api_url);
-            cell_queue.push(cell);
-            current_cell = cell_queue[0];
-            add_progress_bar(current_cell);
-        }
-    };
-
-    var add_progress_bar = function(cell) {
-        var progress_bar_div = cell.element.find('.progress-container');
-        if (progress_bar_div.length < 1) {
-            var input_area = cell.element.find('.input_area');
-            cell_jobs_counter = 0;
-            if (spark_is_running) {
-                jobs_in_cache = cache[0].jobs.length;
+        var spark_progress_bar = function(event, data) {
+            var cell = data.cell;
+            if (is_spark_cell(cell)) {
+                window.clearInterval(current_update_frequency);
+                current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY_ACTIVE, api_url);
+                cell_queue.push(cell);
+                current_cell = cell_queue[0];
+                add_progress_bar(current_cell);
             }
-            var panel = $('<div/>')
-                .addClass('panel')
-                .addClass('panel-default')
-                .addClass('progress-panel')
-                .css({'margin-bottom': '0'})
-                .hide();
-            var jobs_completed_container = $('<div/>')
-                .addClass('progress_counter')
-                .addClass('panel-heading')
-                .text(PROGRESS_COUNT_TEXT + cell_jobs_counter);
-            var progress_bar_container = $('<div/>')
-                .addClass('progress-container');
-            var progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
-            progress_bar.appendTo(progress_bar_container);
-            jobs_completed_container.appendTo(panel);
-            progress_bar_container.appendTo(panel);
-            panel.appendTo(input_area);
-        }
-    };
+        };
 
-    var update_progress_bar = function() {
-        var job = cache[0].jobs[0];
-        var completed = job.numCompletedTasks;
-        var total = job.numTasks;
+        var add_progress_bar = function(cell) {
+            var progress_bar_div = cell.element.find('.progress-container');
+            if (progress_bar_div.length < 1) {
+                var input_area = cell.element.find('.input_area');
+                cell_jobs_counter = 0;
+                if (spark_is_running) {
+                    jobs_in_cache = cache[0].jobs.length;
+                }
+                var panel = $('<div/>')
+                    .addClass('panel')
+                    .addClass('panel-default')
+                    .addClass('progress-panel')
+                    .css({'margin-bottom': '0'})
+                    .hide();
+                var jobs_completed_container = $('<div/>')
+                    .addClass('progress_counter')
+                    .addClass('panel-heading')
+                    .text(PROGRESS_COUNT_TEXT + cell_jobs_counter);
+                var progress_bar_container = $('<div/>')
+                    .addClass('progress-container');
+                var progress_bar = create_progress_bar('progress-bar-warning', 1, 5);
+                progress_bar.appendTo(progress_bar_container);
+                jobs_completed_container.appendTo(panel);
+                progress_bar_container.appendTo(panel);
+                panel.appendTo(input_area);
+            }
+        };
 
-        var progress_bar = current_cell.element.find('.progress');
-        update_progress_count(current_cell, job.jobId);
+        var update_progress_bar = function() {
+            var job = cache[0].jobs[0];
+            var completed = job.numCompletedTasks;
+            var total = job.numTasks;
 
-        var progress = completed / total * 100;
-        progress_bar.show();
-        progress_bar.find('.progress-bar')
-            .attr('class', 'progress-bar ' + get_status_class(job.status))
-            .attr('aria-valuenow', progress)
-            .css('width', progress + '%')
-            .text(completed + ' out of ' + total + ' tasks');
-    };
+            var progress_bar = current_cell.element.find('.progress');
+            update_progress_count(current_cell, job.jobId);
 
-    var update_progress_count = function(cell, jobId) {
-        var progress_count = cell.element.find('.progress_counter');
-        var job_name = "";
-        var canceller = null;
-        if (spark_is_running) {
-            cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
-            job_name =  ": " + cache[0].jobs[0].name
-            canceller = $('<a href="#" class="btn btn-default btn-xs pull-right">Cancel</a>').on(
-                'click',
-                function () { $.get(base_url + "spark/jobs/job/kill?id=" + jobId)});
-        }
+            var progress = completed / total * 100;
+            progress_bar.show();
+            progress_bar.find('.progress-bar')
+                .attr('class', 'progress-bar ' + get_status_class(job.status))
+                .attr('aria-valuenow', progress)
+                .css('width', progress + '%')
+                .text(completed + ' out of ' + total + ' tasks');
+        };
 
-        progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
-        progress_count.append(canceller)
-        cell.element.find('.progress-panel').show();
-    };
+        var update_progress_count = function(cell, jobId) {
+            var progress_count = cell.element.find('.progress_counter');
+            var job_name = "";
+            var canceller = null;
+            if (spark_is_running) {
+                cell_jobs_counter = cache[0].jobs.length - jobs_in_cache;
+                job_name =  ": " + cache[0].jobs[0].name
+                canceller = $('<a href="#" class="btn btn-default btn-xs pull-right">Cancel</a>').on(
+                    'click',
+                    function () { $.get(base_url + "spark/jobs/job/kill?id=" + jobId)});
+            }
 
-    var remove_progress_bar = function() {
-        if (current_cell != null) {
-            var progress_panel = current_cell.element.find('.progress-panel');
-            progress_panel.remove();
+            progress_count.text(PROGRESS_COUNT_TEXT + cell_jobs_counter + job_name);
+            progress_count.append(canceller)
+            cell.element.find('.progress-panel').show();
+        };
 
-            start_next_progress_bar();
-        }
-    };
+        var remove_progress_bar = function() {
+            if (current_cell != null) {
+                var progress_panel = current_cell.element.find('.progress-panel');
+                progress_panel.remove();
 
-    var start_next_progress_bar = function() {
-        cell_queue.shift();
-        current_cell = cell_queue[0];
-        if (current_cell != null) {
-            add_progress_bar(current_cell);
-        } else {
-            window.clearInterval(current_update_frequency);
+                start_next_progress_bar();
+            }
+        };
+
+        var start_next_progress_bar = function() {
+            cell_queue.shift();
+            current_cell = cell_queue[0];
+            if (current_cell != null) {
+                add_progress_bar(current_cell);
+            } else {
+                window.clearInterval(current_update_frequency);
+                current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY, api_url);
+            }
+        };
+
+        var is_spark_cell = function(cell) {
+            // TODO: Find a way to detect if cell is actually running Spark
+            return (cell instanceof CodeCell);
+        };
+
+        var load_ipython_extension = function () {
+            events.on('execute.CodeCell', spark_progress_bar);
+
+            $(document).on('update.progress.bar', update_progress_bar);
+
+            // Kernel becomes idle after a cell finishes executing
+            events.on('kernel_idle.Kernel', remove_progress_bar);
+
+            Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
+            Jupyter.toolbar.add_buttons_group([{
+                'label': 'Show running Spark jobs',
+                'icon': 'fa-tasks',
+                'callback': show_running_jobs,
+                'id': 'show_running_jobs'
+            }]);
+            update(api_url);
             current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY, api_url);
-        }
-    };
+        };
 
-    var is_spark_cell = function(cell) {
-        // TODO: Find a way to detect if cell is actually running Spark
-        return (cell instanceof CodeCell)
-    };
+        return {
+            load_ipython_extension: load_ipython_extension
+        };
+    });
+}
 
-    var load_ipython_extension = function () {
-        events.on('execute.CodeCell', spark_progress_bar);
-
-        $(document).on('update.progress.bar', update_progress_bar);
-
-        // Kernel becomes idle after a cell finishes executing
-        events.on('kernel_idle.Kernel', remove_progress_bar);
-
-        Jupyter.keyboard_manager.command_shortcuts.add_shortcut('Alt-S', show_running_jobs);
-        Jupyter.toolbar.add_buttons_group([{
-            'label': 'Show running Spark jobs',
-            'icon': 'fa-tasks',
-            'callback': show_running_jobs,
-            'id': 'show_running_jobs'
-        }]);
-        update(api_url);
-        current_update_frequency = window.setInterval(update, UPDATE_FREQUENCY, api_url);
-    };
-
-    return {
-        load_ipython_extension: load_ipython_extension
-    };
-});
+module.exports = function() {
+    return { update };
+}
