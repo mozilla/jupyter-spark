@@ -12,7 +12,7 @@ const plugin = {
     id: 'jupyter_spark',
     autoStart: true,
     activate: (app) => {
-        let api_url = "/spark/api/v1";
+        let api_url = app.serviceManager.serverSettings.baseUrl + "/../spark/api/v1";
         let widget = new Widget();
         widget.id = 'jupyter-spark';
         widget.class = 'jupter-spark-panel';
