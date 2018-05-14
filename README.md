@@ -31,7 +31,7 @@ jobs.
 ## Server
 
 The server that communicates between the Jupyter server and Spark is the same
-regardless of the frontend used. It wueries the Spark UI service on the backend
+regardless of the frontend used. It queries the Spark UI service on the backend
 to get the required Spark job information.
 
 A proxied version of the Spark UI can be accessed at
