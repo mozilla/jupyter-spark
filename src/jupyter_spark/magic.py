@@ -16,11 +16,12 @@ class SparkProgress(Magics):
         if line.startswith("http"):
             url = line
         else:
-            param = globals().get(line, None)
-            if type(param).__name__ == "SparkContext":
-                url = param.uiWebUrl
-            elif type(param).__name__ == "SparkSession":
-                url = param.sparkContext.uiWebUrl
+            from pyspark import SparkContext
+            # Using an internal API to avoid asking the user for the SparkContext variable
+            # TODO: Try to find a way without using an internal API
+            sc = SparkContext._active_spark_context
+            if sc is not None:
+                url = sc.uiWebUrl
             else:
                 url = None
 
@@ -32,7 +33,3 @@ class SparkProgress(Magics):
             print("Spark progress monitoring turned on")
 
         comm.close()
-
-
-ip = get_ipython()
-ip.register_magics(SparkProgress)
