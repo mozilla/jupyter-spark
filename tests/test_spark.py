@@ -81,7 +81,7 @@ class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
     def test_spark_backend_url(self):
         class FakeRequest(object):
             # http://localhost:8888/spark/api
-            path = self.spark.proxy_root + '/api'
+            path = self.spark.proxy_url + '/api'
         fake_request = FakeRequest()
         self.assertEqual(self.spark.backend_url("http://localhost:4040", fake_request.path),
                          "http://localhost:4040/api")
