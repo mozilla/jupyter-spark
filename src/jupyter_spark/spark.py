@@ -39,7 +39,7 @@ class Spark(LoggingConfigurable):
         self.proxy_url = url_path_join(self.base_url, self.proxy_root)
 
     def backend_url(self, url, path):
-        request_path = path[len(self.proxy_root):]
+        request_path = path[len(self.proxy_url):]
         return url_path_join(url, request_path)
 
     def replace(self, content):
