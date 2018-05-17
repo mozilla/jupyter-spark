@@ -50,7 +50,7 @@ class SparkHandlerTests(tornado.testing.AsyncHTTPTestCase):
             (FakeVerbatimHandler.handler_root, FakeVerbatimHandler),
         ])
 
-    def test_http_fetch_error_url_mssing(self):
+    def test_http_fetch_error_url_missing(self):
         response = self.fetch(self.spark.proxy_root)
         self.assertEqual(response.code, 200)
         self.assertIn(six.b('SPARK_URL_MISSING'), response.body)
