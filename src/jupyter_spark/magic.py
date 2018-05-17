@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 from ipykernel.comm import Comm
-from IPython import get_ipython
 from IPython.core.magic import Magics, line_magic, magics_class
 
 
