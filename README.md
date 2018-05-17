@@ -77,22 +77,23 @@ pip uninstall jupyter-spark
 
 ## Configuration
 
-The Spark API that the job metadata is fetched from can be different for each SparkContext. As default, for the first Spark context uses port 4040, for the second 4041 and so on. If however `spark.ui.port` is set to 0 in SparkConf, Spark will choose a random ephemeral port for the API. In order to support this behaviour (and allow more than one tab in Jupyter with a SparkContext), copy the Jupyter notebook magic `spark_progress.py` from the `src/magic` into your ipython profile's startup folder, e.g. for the default profile this is `~/.ipython/profile_default/startup/`.
+The Spark API that the job metadata is fetched from can be different for each SparkContext. As default, for the first Spark context uses port 4040, for the second 4041 and so on. If however `spark.ui.port` is set to 0 in SparkConf, Spark will choose a random ephemeral port for the API. 
 
-Then in your Spark notebook you can turn on Spark progress monitoring py providing the Spark API URL (e.g. `http://localhost:4040`)
+In order to support this behaviour (and allow more than one tab in Jupyter with a SparkContext) load the jupyter spark extension
+
+```python
+%load_ext jupyter_spark
+```
+
+For Spark 2 use the provided magic without parameter
+
+```python
+%spark_progress
+```
+For Spark 1 provide the Spark API URL (e.g. `http://localhost:4040`)
 
 ```python
 %spark_progress http://<spark-api-server>:<port>
-```
-
-or, if you use Spark 2.0 or newer, just provide the variable name that holds the SparkContext (`sc`) or SparkSession (`spark`):
-
-```python
-%spark_progress sc
-```
-
-```python
-%spark_progress spark
 ```
 
 To turn it off again use
