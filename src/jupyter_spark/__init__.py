@@ -46,3 +46,6 @@ def load_ipython_extension(ip):
     from .magic import SparkProgress
 
     ip.register_magics(SparkProgress)
+
+    # Immediately start Spark Progress
+    SparkProgress().init()
