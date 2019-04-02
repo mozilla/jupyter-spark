@@ -4,11 +4,13 @@
 
 [![codecov](https://codecov.io/gh/mozilla/jupyter-spark/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/jupyter-spark)
 
-Jupyter Notebook extension for Apache Spark integration.
+Jupyter Notebook extension and JupyterLab plugin for Apache Spark integration.
 
-Includes a progress indicator for the current Notebook cell if it invokes a
-Spark job. Queries the Spark UI service on the backend to get the required
-Spark job information.
+## Jupyter Notebook
+
+In the classic Jupyter Notebook, it includes a progress indicator for the
+current Notebook cell if it invokes a Spark job. It also provides a modal dialog
+to show the progress of all running Spark jobs.
 
 ![Alt text](/screenshots/ProgressBar.png?raw=true "Spark progress bar")
 
@@ -19,12 +21,27 @@ button, or press ```Alt+S```.
 
 ![Alt text](/screenshots/Dialog.png?raw=true "Spark dialog")
 
+## JupyterLab
+
+In JupyterLab, it provides a left-side pane showing the currently running Spark
+jobs.
+
+![Alt text](/screenshots/JupyterLab.png?raw=true "Spark side pane")
+
+## Server
+
+The server that communicates between the Jupyter server and Spark is the same
+regardless of the frontend used. It queries the Spark UI service on the backend
+to get the required Spark job information.
+
 A proxied version of the Spark UI can be accessed at
 http://localhost:8888/spark.
 
 ## Installation
 
-To install, simply run:
+### Jupyter Notebook
+
+To install for Jupyter Notebook, simply run:
 
 ```
 pip install jupyter-spark
@@ -48,7 +65,7 @@ jupyter nbextension list
 jupyter serverextension list
 ```
 
-Pleaes feel free to install [lxml](http://lxml.de/) as well to improve
+Please feel free to install [lxml](http://lxml.de/) as well to improve
 performance of the server side communication to Spark using your favorite
 package manager, e.g.:
 
@@ -74,6 +91,48 @@ jupyter nbextension disable --py jupyter_spark
 jupyter nbextension uninstall --py jupyter_spark
 pip uninstall jupyter-spark
 ```
+### JupyterLab
+
+To install for JupyterLab, simply run:
+
+```
+pip install jupyter-spark
+jupyter serverextension enable --py jupyter_spark
+jupyter labextension install jupyter_spark
+```
+
+To double-check if the extension was correctly installed run:
+
+```
+jupyter nbextension list
+jupyter labextension list
+```
+
+Please feel free to install [lxml](http://lxml.de/) as well to improve
+performance of the server side communication to Spark using your favorite
+package manager, e.g.:
+
+```
+pip install lxml
+```
+
+For development and testing, clone the project and run from a shell in the
+project's root directory:
+
+```
+pip install -e .
+jupyter serverextension enable --py jupyter_spark
+npm install
+jupyter labextension install .
+```
+
+To uninstall the extension run:
+
+```
+jupyter serverextension disable --py jupyter_spark
+jupyter labextension disable --py jupyter_spark
+pip uninstall jupyter-spark
+```
 
 ## Configuration
 
@@ -90,6 +149,10 @@ There is a simple `pyspark` example included in `examples` to confirm that your
 installation is working.
 
 ## Changelog
+
+### 0.5.0
+
+- Added support for JupyterLab
 
 ### 0.3.0 (2016-07-04)
 
