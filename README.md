@@ -1,5 +1,7 @@
 # jupyter-spark
 
+**NOTE: This project is currently unmaintained, if anyone would like to take over maintenance please [let us know](https://github.com/mozilla/jupyter-spark/issues/55).**
+
 [![Build Status](https://travis-ci.org/mozilla/jupyter-spark.svg?branch=master)](https://travis-ci.org/mozilla/jupyter-spark)
 
 [![codecov](https://codecov.io/gh/mozilla/jupyter-spark/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/jupyter-spark)
