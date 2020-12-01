@@ -79,12 +79,32 @@ pip uninstall jupyter-spark
 
 ## Configuration
 
-To change the URL of the Spark API that the job metadata is fetched from
-override the `Spark.url` config value, e.g. on the command line:
+The Spark API that the job metadata is fetched from can be different for each SparkContext. As default, for the first Spark context uses port 4040, for the second 4041 and so on. If however `spark.ui.port` is set to 0 in SparkConf, Spark will choose a random ephemeral port for the API. 
 
+In order to support this behaviour (and allow more than one tab in Jupyter with a SparkContext) load the jupyter spark extension
+
+```python
+%load_ext jupyter_spark
 ```
-jupyter notebook --Spark.url="http://localhost:4040"
+
+For Spark 2 use the provided magic without parameter
+
+```python
+%spark_progress
 ```
+For Spark 1 provide the Spark API URL (e.g. `http://localhost:4040`)
+
+```python
+%spark_progress http://<spark-api-server>:<port>
+```
+
+To turn it off again use
+
+```python
+%spark_progress None
+```
+
+Note, these commands are line magics and need to have their own cell.
 
 ## Example
 

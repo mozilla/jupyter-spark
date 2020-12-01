@@ -18,9 +18,16 @@ class SparkHandler(IPythonHandler):
         the verbatim response.
         """
         http = httpclient.AsyncHTTPClient()
-        url = self.spark.backend_url(self.request)
-        self.spark.log.debug('Fetching from Spark %s', url)
-        http.fetch(url, self.handle_response)
+        spark_url = self.get_argument("spark_url", None)
+        if spark_url is not None:
+            url = self.spark.backend_url(spark_url, self.request.path)
+            http.fetch(url, self.handle_response)
+        else:
+            content_type = 'application/json'
+            content = json.dumps({'error': 'SPARK_URL_MISSING'})
+            self.set_header('Content-Type', content_type)
+            self.write(content)
+            self.finish()
 
     def handle_response(self, response):
         if response.error:

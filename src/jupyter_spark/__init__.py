@@ -40,3 +40,12 @@ def load_jupyter_server_extension(nbapp):  # pragma: no cover
         [(spark.proxy_url + '.*', SparkHandler, {'spark': spark})]
     )
     nbapp.log.info("Jupyter-Spark enabled!")
+
+
+def load_ipython_extension(ip):
+    from .magic import SparkProgress
+
+    ip.register_magics(SparkProgress)
+
+    # Immediately start Spark Progress
+    SparkProgress().init()
